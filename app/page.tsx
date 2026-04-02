@@ -226,23 +226,42 @@ export default function Page() {
   )}`;
 
   useEffect(() => {
-    carregarPedidos();
+  carregarPedidos();
 
-    const channel = supabase
-      .channel("pedidos-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "pedidos" },
-        () => {
-          carregarPedidos();
+  const channel = supabase
+    .channel("pedidos-realtime")
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "pedidos" },
+      () => {
+        carregarPedidos();
+
+        if (aba === "atendente") {
+          const audio = new Audio("/notificacao.mp3");
+          audio.play().catch(() => {});
         }
-      )
-      .subscribe();
+      }
+    )
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "pedidos" },
+      () => {
+        carregarPedidos();
+      }
+    )
+    .on(
+      "postgres_changes",
+      { event: "DELETE", schema: "public", table: "pedidos" },
+      () => {
+        carregarPedidos();
+      }
+    )
+    .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [aba]);
 
   async function carregarPedidos() {
     setCarregando(true);
