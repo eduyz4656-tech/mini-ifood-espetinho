@@ -1,0 +1,648 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+type Categoria =
+  | "Tradicional"
+  | "Premium"
+  | "Acomp. Tradicional"
+  | "Acomp. Premium"
+  | "Na Chapa"
+  | "Suco"
+  | "Geladinho";
+
+type Produto = {
+  id: number;
+  nome: string;
+  preco: number;
+  categoria: Categoria;
+};
+
+type ItemCarrinho = Produto & {
+  qtd: number;
+};
+
+type TipoEntrega = "delivery" | "retirada";
+type StatusPedido = "novo" | "preparo" | "saiu_entrega" | "entregue";
+
+type Pedido = {
+  id: number;
+  nome: string;
+  telefone: string;
+  tipoEntrega: TipoEntrega;
+  endereco: string;
+  pagamento: string;
+  observacao: string;
+  itens: ItemCarrinho[];
+  total: number;
+  status: StatusPedido;
+  criadoEm: string;
+};
+
+const PRODUTOS: Produto[] = [
+  { id: 1, nome: "Carne", preco: 8, categoria: "Tradicional" },
+  { id: 2, nome: "Misto Tradicional", preco: 8, categoria: "Tradicional" },
+
+  { id: 3, nome: "Tulipa", preco: 12, categoria: "Premium" },
+  { id: 4, nome: "Medalhão Carne", preco: 12, categoria: "Premium" },
+  { id: 5, nome: "Picanha", preco: 12, categoria: "Premium" },
+  { id: 6, nome: "Kafta c/ Queijo Coalho", preco: 12, categoria: "Premium" },
+  { id: 7, nome: "Premium Extra (editar)", preco: 12, categoria: "Premium" },
+
+  {
+    id: 8,
+    nome: "Tradicional Simples - Farofa e Macaxeira",
+    preco: 10,
+    categoria: "Acomp. Tradicional",
+  },
+  {
+    id: 9,
+    nome: "Tradicional Especial - Macaxeira e Vinagrete",
+    preco: 15,
+    categoria: "Acomp. Tradicional",
+  },
+  {
+    id: 10,
+    nome: "Tradicional Completo - Arroz, Vinagrete, Farofa e Macaxeira",
+    preco: 20,
+    categoria: "Acomp. Tradicional",
+  },
+
+  {
+    id: 11,
+    nome: "Premium Simples - Farofa e Macaxeira",
+    preco: 14,
+    categoria: "Acomp. Premium",
+  },
+  {
+    id: 12,
+    nome: "Premium Especial - Macaxeira e Vinagrete",
+    preco: 18,
+    categoria: "Acomp. Premium",
+  },
+  {
+    id: 13,
+    nome: "Premium Completo - Arroz, Vinagrete, Farofa e Macaxeira",
+    preco: 23,
+    categoria: "Acomp. Premium",
+  },
+
+  { id: 14, nome: "Carne na Chapa", preco: 23, categoria: "Na Chapa" },
+  { id: 15, nome: "Picanha na Chapa", preco: 30, categoria: "Na Chapa" },
+
+  { id: 16, nome: "Maracujá 350ml", preco: 10, categoria: "Suco" },
+  { id: 17, nome: "Acerola 350ml", preco: 8, categoria: "Suco" },
+  { id: 18, nome: "Cupuaçu 350ml", preco: 8, categoria: "Suco" },
+  { id: 19, nome: "Abacaxi c/ Hortelã 350ml", preco: 8, categoria: "Suco" },
+
+  { id: 20, nome: "Ninho com Nutella", preco: 10, categoria: "Geladinho" },
+  { id: 21, nome: "Maracujá com Chocolate", preco: 10, categoria: "Geladinho" },
+  { id: 22, nome: "Pudim", preco: 10, categoria: "Geladinho" },
+  { id: 23, nome: "Oreo", preco: 10, categoria: "Geladinho" },
+  { id: 24, nome: "Ovomaltine", preco: 10, categoria: "Geladinho" },
+  { id: 25, nome: "Paçoca", preco: 10, categoria: "Geladinho" },
+];
+
+const CATEGORIAS: Categoria[] = [
+  "Tradicional",
+  "Premium",
+  "Acomp. Tradicional",
+  "Acomp. Premium",
+  "Na Chapa",
+  "Suco",
+  "Geladinho",
+];
+
+function dinheiro(valor: number) {
+  return valor.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+}
+
+export default function Page() {
+  const [aba, setAba] = useState<"cliente" | "admin">("cliente");
+
+  const [nome, setNome] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [tipoEntrega, setTipoEntrega] = useState<TipoEntrega>("delivery");
+  const [endereco, setEndereco] = useState("");
+  const [pagamento, setPagamento] = useState("Pix");
+  const [observacao, setObservacao] = useState("");
+
+  const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
+
+  useEffect(() => {
+    const dados = localStorage.getItem("pedidos-thalisca");
+    if (dados) setPedidos(JSON.parse(dados));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("pedidos-thalisca", JSON.stringify(pedidos));
+  }, [pedidos]);
+
+  function adicionar(produto: Produto) {
+    setCarrinho((prev) => {
+      const existe = prev.find((item) => item.id === produto.id);
+
+      if (existe) {
+        return prev.map((item) =>
+          item.id === produto.id ? { ...item, qtd: item.qtd + 1 } : item
+        );
+      }
+
+      return [...prev, { ...produto, qtd: 1 }];
+    });
+  }
+
+  function alterarQtd(id: number, delta: number) {
+    setCarrinho((prev) =>
+      prev
+        .map((item) =>
+          item.id === id ? { ...item, qtd: item.qtd + delta } : item
+        )
+        .filter((item) => item.qtd > 0)
+    );
+  }
+
+  function removerItem(id: number) {
+    setCarrinho((prev) => prev.filter((item) => item.id !== id));
+  }
+
+  const total = useMemo(() => {
+    return carrinho.reduce((soma, item) => soma + item.preco * item.qtd, 0);
+  }, [carrinho]);
+
+  function limparFormulario() {
+    setNome("");
+    setTelefone("");
+    setTipoEntrega("delivery");
+    setEndereco("");
+    setPagamento("Pix");
+    setObservacao("");
+    setCarrinho([]);
+  }
+
+  function enviarPedido() {
+    if (!nome.trim()) return alert("Coloca o nome do cliente.");
+    if (!telefone.trim()) return alert("Coloca o telefone.");
+    if (tipoEntrega === "delivery" && !endereco.trim()) {
+      return alert("Coloca o endereço.");
+    }
+    if (carrinho.length === 0) return alert("Adiciona pelo menos 1 item.");
+
+    const novoPedido: Pedido = {
+      id: Date.now(),
+      nome,
+      telefone,
+      tipoEntrega,
+      endereco,
+      pagamento,
+      observacao,
+      itens: carrinho,
+      total,
+      status: "novo",
+      criadoEm: new Date().toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    setPedidos((prev) => [novoPedido, ...prev]);
+    limparFormulario();
+    setAba("admin");
+    alert("Pedido enviado!");
+  }
+
+  function mudarStatus(id: number, status: StatusPedido) {
+    setPedidos((prev) =>
+      prev.map((pedido) =>
+        pedido.id === id ? { ...pedido, status } : pedido
+      )
+    );
+  }
+
+  function excluirPedido(id: number) {
+    const ok = confirm("Excluir esse pedido?");
+    if (!ok) return;
+    setPedidos((prev) => prev.filter((pedido) => pedido.id !== id));
+  }
+
+  const novos = pedidos.filter((p) => p.status === "novo");
+  const preparo = pedidos.filter((p) => p.status === "preparo");
+  const rota = pedidos.filter((p) => p.status === "saiu_entrega");
+  const concluidos = pedidos.filter((p) => p.status === "entregue");
+  const faturamento = concluidos.reduce((soma, pedido) => soma + pedido.total, 0);
+
+  return (
+    <main className="pagina">
+      <div className="container">
+        <div className="topo-card">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 16,
+              alignItems: "flex-start",
+              flexWrap: "wrap",
+            }}
+          >
+            <div>
+              <h1 className="titulo-principal">🔥 Espetinho do Thalisca</h1>
+              <p className="subtitulo">
+                Delivery, retirada, painel do atendente e cardápio completo
+              </p>
+            </div>
+
+            <div
+              style={{
+                minWidth: 220,
+                background: "#111",
+                border: "1px solid #333",
+                borderRadius: 18,
+                padding: 14,
+              }}
+            >
+              <div className="muted pequeno">Faturamento finalizado</div>
+              <div
+                style={{
+                  fontSize: "2rem",
+                  fontWeight: 800,
+                  color: "#ffcc73",
+                  marginTop: 6,
+                }}
+              >
+                {dinheiro(faturamento)}
+              </div>
+            </div>
+          </div>
+
+          <div className="info-grid">
+            <div>📞 (68) 99237-3530</div>
+            <div>📞 (68) 99225-2648</div>
+            <div>📍 Av. Epitácio Pessoa, bairro Manchete</div>
+          </div>
+        </div>
+
+        <div className="abas">
+          <button
+            onClick={() => setAba("cliente")}
+            className={aba === "cliente" ? "aba ativa" : "aba"}
+          >
+            App do cliente
+          </button>
+
+          <button
+            onClick={() => setAba("admin")}
+            className={aba === "admin" ? "aba ativa" : "aba"}
+          >
+            Painel do atendente
+          </button>
+        </div>
+
+        {aba === "cliente" ? (
+          <div className="layout-cliente">
+            <div className="coluna-principal">
+              <section className="card">
+                <h2 style={{ fontSize: "2rem", marginBottom: 18 }}>Novo pedido</h2>
+
+                <div className="grid-2">
+                  <input
+                    className="campo"
+                    placeholder="Nome do cliente"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                  />
+                  <input
+                    className="campo"
+                    placeholder="Telefone"
+                    value={telefone}
+                    onChange={(e) => setTelefone(e.target.value)}
+                  />
+                </div>
+
+                <div className="tipo-entrega">
+                  <button
+                    onClick={() => setTipoEntrega("delivery")}
+                    className={
+                      tipoEntrega === "delivery" ? "aba ativa pequena" : "aba pequena"
+                    }
+                  >
+                    Delivery
+                  </button>
+
+                  <button
+                    onClick={() => setTipoEntrega("retirada")}
+                    className={
+                      tipoEntrega === "retirada" ? "aba ativa pequena" : "aba pequena"
+                    }
+                  >
+                    Retirada
+                  </button>
+                </div>
+
+                {tipoEntrega === "delivery" && (
+                  <input
+                    className="campo margem-top"
+                    placeholder="Endereço"
+                    value={endereco}
+                    onChange={(e) => setEndereco(e.target.value)}
+                  />
+                )}
+
+                <div className="grid-2 margem-top">
+                  <select
+                    className="campo"
+                    value={pagamento}
+                    onChange={(e) => setPagamento(e.target.value)}
+                  >
+                    <option>Pix</option>
+                    <option>Dinheiro</option>
+                    <option>Cartão</option>
+                  </select>
+
+                  <textarea
+                    className="campo"
+                    placeholder="Observação"
+                    value={observacao}
+                    onChange={(e) => setObservacao(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+              </section>
+
+              <section className="card">
+                <h2 style={{ fontSize: "2rem", marginBottom: 18 }}>Cardápio</h2>
+
+                <div className="categorias">
+                  {CATEGORIAS.map((categoria) => {
+                    const itens = PRODUTOS.filter((p) => p.categoria === categoria);
+
+                    return (
+                      <div key={categoria} className="categoria-box">
+                        <h3 className="categoria-titulo">{categoria}</h3>
+
+                        <div className="produtos-grid">
+                          {itens.map((produto) => (
+                            <button
+                              key={produto.id}
+                              onClick={() => adicionar(produto)}
+                              className="produto-card"
+                            >
+                              <div className="produto-nome">{produto.nome}</div>
+                              <div className="produto-preco">
+                                {dinheiro(produto.preco)}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            </div>
+
+            <aside className="card carrinho-card">
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  alignItems: "center",
+                  marginBottom: 16,
+                  flexWrap: "wrap",
+                }}
+              >
+                <h2 style={{ fontSize: "2rem", margin: 0 }}>Carrinho</h2>
+                <span className="badge">{carrinho.length} itens</span>
+              </div>
+
+              {carrinho.length === 0 ? (
+                <p className="muted">Nenhum item adicionado.</p>
+              ) : (
+                <div className="itens-carrinho">
+                  {carrinho.map((item) => (
+                    <div key={item.id} className="item-card">
+                      <div className="item-topo">
+                        <div>
+                          <div className="item-nome">{item.nome}</div>
+                          <div className="item-info">
+                            {dinheiro(item.preco)} cada
+                          </div>
+                        </div>
+                        <div className="item-total">
+                          {dinheiro(item.preco * item.qtd)}
+                        </div>
+                      </div>
+
+                      <div className="item-acoes">
+                        <button
+                          onClick={() => alterarQtd(item.id, -1)}
+                          className="mini-btn"
+                        >
+                          -
+                        </button>
+                        <span>{item.qtd}</span>
+                        <button
+                          onClick={() => alterarQtd(item.id, 1)}
+                          className="mini-btn"
+                        >
+                          +
+                        </button>
+                        <button
+                          onClick={() => removerItem(item.id)}
+                          className="danger-btn"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="total-box">
+                <div className="total-texto">Total: {dinheiro(total)}</div>
+                <div className="muted pequeno">Sem taxa de entrega</div>
+              </div>
+
+              <button onClick={enviarPedido} className="principal-btn">
+                Enviar pedido
+              </button>
+            </aside>
+          </div>
+        ) : (
+          <div className="layout-admin">
+            <AdminColuna titulo="Novos" quantidade={novos.length}>
+              {novos.length === 0 ? (
+                <p className="muted">Nenhum pedido</p>
+              ) : (
+                novos.map((pedido) => (
+                  <PedidoCard
+                    key={pedido.id}
+                    pedido={pedido}
+                    botaoTexto="Aceitar"
+                    onClick={() => mudarStatus(pedido.id, "preparo")}
+                    onDelete={() => excluirPedido(pedido.id)}
+                  />
+                ))
+              )}
+            </AdminColuna>
+
+            <AdminColuna titulo="Em preparo" quantidade={preparo.length}>
+              {preparo.length === 0 ? (
+                <p className="muted">Nenhum pedido</p>
+              ) : (
+                preparo.map((pedido) => (
+                  <PedidoCard
+                    key={pedido.id}
+                    pedido={pedido}
+                    botaoTexto={
+                      pedido.tipoEntrega === "delivery"
+                        ? "Saiu para entrega"
+                        : "Entregue"
+                    }
+                    onClick={() =>
+                      mudarStatus(
+                        pedido.id,
+                        pedido.tipoEntrega === "delivery"
+                          ? "saiu_entrega"
+                          : "entregue"
+                      )
+                    }
+                    onDelete={() => excluirPedido(pedido.id)}
+                  />
+                ))
+              )}
+            </AdminColuna>
+
+            <AdminColuna titulo="Saiu para entrega" quantidade={rota.length}>
+              {rota.length === 0 ? (
+                <p className="muted">Nenhum pedido</p>
+              ) : (
+                rota.map((pedido) => (
+                  <PedidoCard
+                    key={pedido.id}
+                    pedido={pedido}
+                    botaoTexto="Entregue"
+                    onClick={() => mudarStatus(pedido.id, "entregue")}
+                    onDelete={() => excluirPedido(pedido.id)}
+                  />
+                ))
+              )}
+            </AdminColuna>
+
+            <AdminColuna titulo="Resumo" quantidade={pedidos.length}>
+              <div className="resumo-box">
+                <div>Total de pedidos: {pedidos.length}</div>
+                <div>Concluídos: {concluidos.length}</div>
+                <div className="faturamento">
+                  Faturamento: {dinheiro(faturamento)}
+                </div>
+              </div>
+
+              <div className="concluidos-box">
+                <h3>Concluídos</h3>
+                {concluidos.length === 0 ? (
+                  <p className="muted">Nenhum concluído</p>
+                ) : (
+                  <div>
+                    {concluidos.map((pedido) => (
+                      <PedidoCard
+                        key={pedido.id}
+                        pedido={pedido}
+                        onDelete={() => excluirPedido(pedido.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </AdminColuna>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
+
+function AdminColuna({
+  titulo,
+  quantidade,
+  children,
+}: {
+  titulo: string;
+  quantidade: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="card admin-coluna">
+      <div className="admin-topo">
+        <h2>{titulo}</h2>
+        <span className="badge">{quantidade}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function PedidoCard({
+  pedido,
+  botaoTexto,
+  onClick,
+  onDelete,
+}: {
+  pedido: Pedido;
+  botaoTexto?: string;
+  onClick?: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="pedido-card">
+      <div className="pedido-topo">
+        <div>
+          <div className="pedido-nome">{pedido.nome}</div>
+          <div className="pedido-info">
+            {pedido.telefone} • {pedido.criadoEm}
+          </div>
+        </div>
+        <span className="badge pequeno-badge">{pedido.tipoEntrega}</span>
+      </div>
+
+      {pedido.endereco ? (
+        <div className="pedido-info margem-top">{pedido.endereco}</div>
+      ) : null}
+
+      <div className="pedido-info margem-top">
+        Pagamento: {pedido.pagamento}
+      </div>
+
+      {pedido.observacao ? (
+        <div className="pedido-obs">Obs: {pedido.observacao}</div>
+      ) : null}
+
+      <div className="pedido-itens">
+        {pedido.itens.map((item) => (
+          <div key={item.id}>
+            {item.qtd}x {item.nome} - {dinheiro(item.preco * item.qtd)}
+          </div>
+        ))}
+      </div>
+
+      <div className="pedido-total">Total: {dinheiro(pedido.total)}</div>
+
+      <div className="pedido-botoes">
+        {botaoTexto && onClick ? (
+          <button onClick={onClick} className="principal-btn pequeno-btn">
+            {botaoTexto}
+          </button>
+        ) : null}
+
+        <button onClick={onDelete} className="danger-btn pequeno-btn">
+          Excluir
+        </button>
+      </div>
+    </div>
+  );
+}
