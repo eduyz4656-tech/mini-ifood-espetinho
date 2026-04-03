@@ -20,7 +20,7 @@ function campoStyle(erro?: boolean): React.CSSProperties {
   return erro
     ? {
         border: "2px solid #ff4d4f",
-        boxShadow: "0 0 0 2px rgba(255,77,79,0.15)",
+        boxShadow: "0 0 0 2px rgba(255, 77, 79, 0.12)",
       }
     : {};
 }
@@ -28,40 +28,40 @@ function campoStyle(erro?: boolean): React.CSSProperties {
 function CategoriaBloco({
   titulo,
   produtos,
-  onAdd,
   aberta,
   onToggle,
+  onAdd,
 }: {
   titulo: string;
   produtos: Produto[];
-  onAdd: (produto: Produto) => void;
   aberta: boolean;
   onToggle: () => void;
+  onAdd: (produto: Produto) => void;
 }) {
-  if (produtos.length === 0) return null;
+  if (!produtos.length) return null;
 
   return (
-    <div style={{ marginBottom: 14 }}>
-      <button type="button" onClick={onToggle} className="categoria-botao">
+    <div className="categoria-wrap">
+      <button type="button" className="categoria-botao" onClick={onToggle}>
         <span>{titulo}</span>
         <span>{aberta ? "▲" : "▼"}</span>
       </button>
 
-      {aberta ? (
-        <div className="produtos-grid" style={{ marginTop: 12 }}>
+      {aberta && (
+        <div className="produtos-grid">
           {produtos.map((produto) => (
             <button
-              key={produto.id}
-              onClick={() => onAdd(produto)}
-              className="produto-card"
               type="button"
+              key={produto.id}
+              className="produto-card"
+              onClick={() => onAdd(produto)}
             >
               <div className="produto-nome">{produto.nome}</div>
               <div className="produto-preco">{dinheiro(produto.preco)}</div>
             </button>
           ))}
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
@@ -80,8 +80,8 @@ export default function Page() {
   const [observacao, setObservacao] = useState("");
 
   const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
-  const [enviando, setEnviando] = useState(false);
   const [mostrarCarrinho, setMostrarCarrinho] = useState(false);
+  const [enviando, setEnviando] = useState(false);
   const [categoriaAberta, setCategoriaAberta] = useState<string | null>("Espetinho avulso tradicional");
   const [erros, setErros] = useState<CampoErros>({});
 
@@ -90,7 +90,7 @@ export default function Page() {
   const enderecoRef = useRef<HTMLInputElement | null>(null);
   const mesaRef = useRef<HTMLInputElement | null>(null);
   const pagamentoRef = useRef<HTMLSelectElement | null>(null);
-  const trocoParaRef = useRef<HTMLInputElement | null>(null);
+  const trocoRef = useRef<HTMLInputElement | null>(null);
   const cardapioRef = useRef<HTMLElement | null>(null);
 
   const total = useMemo(() => {
@@ -100,17 +100,23 @@ export default function Page() {
   function adicionar(produto: Produto) {
     setCarrinho((prev) => {
       const existe = prev.find((item) => item.id === produto.id);
-
       if (existe) {
         return prev.map((item) =>
           item.id === produto.id ? { ...item, qtd: item.qtd + 1 } : item
         );
       }
-
       return [...prev, { ...produto, qtd: 1 }];
     });
 
     setErros((prev) => ({ ...prev, carrinho: false }));
+  }
+
+  function aumentar(id: number) {
+    setCarrinho((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, qtd: item.qtd + 1 } : item
+      )
+    );
   }
 
   function diminuir(id: number) {
@@ -123,19 +129,11 @@ export default function Page() {
     );
   }
 
-  function aumentar(id: number) {
-    setCarrinho((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, qtd: item.qtd + 1 } : item
-      )
-    );
-  }
-
   function removerDoCarrinho(id: number) {
     setCarrinho((prev) => prev.filter((item) => item.id !== id));
   }
 
-  function focarPrimeiroErro(novosErros: CampoErros) {
+  function irAoPrimeiroErro(novosErros: CampoErros) {
     if (novosErros.nome) {
       nomeRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       nomeRef.current?.focus();
@@ -167,8 +165,8 @@ export default function Page() {
     }
 
     if (novosErros.trocoPara) {
-      trocoParaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      trocoParaRef.current?.focus();
+      trocoRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      trocoRef.current?.focus();
       return;
     }
 
@@ -177,7 +175,7 @@ export default function Page() {
     }
   }
 
-  function validarFormulario() {
+  function validar() {
     const novosErros: CampoErros = {};
 
     if (!nome.trim()) novosErros.nome = true;
@@ -185,59 +183,21 @@ export default function Page() {
     if (!pagamento.trim()) novosErros.pagamento = true;
     if (tipoEntrega === "delivery" && !endereco.trim()) novosErros.endereco = true;
     if (tipoEntrega === "mesa" && !mesa.trim()) novosErros.mesa = true;
-    if (pagamento === "Dinheiro" && precisaTroco && !trocoPara.trim()) {
-      novosErros.trocoPara = true;
-    }
+    if (pagamento === "Dinheiro" && precisaTroco && !trocoPara.trim()) novosErros.trocoPara = true;
     if (carrinho.length === 0) novosErros.carrinho = true;
 
     setErros(novosErros);
 
     if (Object.keys(novosErros).length > 0) {
-      focarPrimeiroErro(novosErros);
+      irAoPrimeiroErro(novosErros);
       return false;
     }
 
     return true;
   }
 
-  function montarMensagemWhatsApp(idPedido: number) {
-    const itensTexto = carrinho
-      .map(
-        (item) =>
-          `- ${item.qtd}x ${item.nome} (${dinheiro(item.preco * item.qtd)})`
-      )
-      .join("\n");
-
-    const detalhePagamento =
-      pagamento === "Dinheiro" && precisaTroco
-        ? `${pagamento} | Troco para ${trocoPara}`
-        : pagamento;
-
-    const entregaTexto =
-      tipoEntrega === "delivery"
-        ? endereco
-        : tipoEntrega === "mesa"
-        ? `Mesa ${mesa}`
-        : "Retirada no local";
-
-    return `🔥 *Novo pedido - Espetinho do Thalisca*
-
-*Pedido:* #${idPedido}
-*Cliente:* ${nome}
-*Telefone:* ${telefone}
-*Entrega:* ${tipoEntrega}
-*Local:* ${entregaTexto}
-*Pagamento:* ${detalhePagamento}
-*Observação:* ${observacao || "sem observação"}
-
-*Itens:*
-${itensTexto}
-
-*Total:* ${dinheiro(total)}`;
-  }
-
   async function enviarPedido() {
-    if (!validarFormulario()) return;
+    if (!validar()) return;
 
     setEnviando(true);
 
@@ -246,14 +206,14 @@ ${itensTexto}
         ? endereco
         : tipoEntrega === "mesa"
         ? `Mesa ${mesa}`
-        : "retirada no local";
+        : "Retirada no local";
 
     const observacaoFinal =
       pagamento === "Dinheiro" && precisaTroco
-        ? observacao
-          ? `${observacao} | Troco para ${trocoPara}`
+        ? observacao.trim()
+          ? `${observacao.trim()} | Troco para ${trocoPara}`
           : `Troco para ${trocoPara}`
-        : observacao || "";
+        : observacao.trim();
 
     const { data, error } = await supabase
       .from("pedidos")
@@ -279,12 +239,6 @@ ${itensTexto}
       alert("Erro ao enviar pedido.");
       return;
     }
-
-    const mensagem = montarMensagemWhatsApp(data.id);
-    const numero = "5568992252648";
-    const linkWhatsapp = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
-
-    window.open(linkWhatsapp, "_blank");
 
     setNome("");
     setTelefone("");
@@ -316,28 +270,17 @@ ${itensTexto}
                 <div>📍 Av. Diamantino Augusto de Macedo, 866 - Olaria</div>
               </div>
 
-              <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <a
-                  href="https://wa.me/5568992252648?text=Ol%C3%A1%2C%20gostaria%20de%20fazer%20um%20pedido."
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="principal-btn"
-                  style={{ display: "inline-block", width: "auto", textDecoration: "none" }}
-                >
-                  🔥 Pedir pelo WhatsApp
-                </a>
-
-                <Link href="/painel" className="aba" style={{ textDecoration: "none" }}>
+              <div className="topo-botoes">
+                <Link href="/painel" className="aba">
                   Painel do atendente
                 </Link>
               </div>
             </div>
 
             <button
-              onClick={() => setMostrarCarrinho(true)}
-              className="principal-btn"
-              style={{ width: "auto", minWidth: 120 }}
               type="button"
+              className="principal-btn carrinho-topo-btn"
+              onClick={() => setMostrarCarrinho(true)}
             >
               🛒 {carrinho.reduce((soma, item) => soma + item.qtd, 0)}
             </button>
@@ -347,7 +290,7 @@ ${itensTexto}
         <div className="layout-cliente">
           <div className="coluna-principal">
             <section className="card">
-              <h2 style={{ fontSize: "2rem", marginBottom: 18 }}>Novo pedido</h2>
+              <h2 className="secao-titulo">Novo pedido</h2>
 
               <div className="grid-2">
                 <input
@@ -382,30 +325,30 @@ ${itensTexto}
               <div className="tipo-entrega">
                 <button
                   type="button"
-                  onClick={() => setTipoEntrega("delivery")}
                   className={tipoEntrega === "delivery" ? "aba ativa pequena" : "aba pequena"}
+                  onClick={() => setTipoEntrega("delivery")}
                 >
                   Delivery
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => setTipoEntrega("retirada")}
                   className={tipoEntrega === "retirada" ? "aba ativa pequena" : "aba pequena"}
+                  onClick={() => setTipoEntrega("retirada")}
                 >
                   Retirada
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => setTipoEntrega("mesa")}
                   className={tipoEntrega === "mesa" ? "aba ativa pequena" : "aba pequena"}
+                  onClick={() => setTipoEntrega("mesa")}
                 >
                   Mesa
                 </button>
               </div>
 
-              {tipoEntrega === "delivery" ? (
+              {tipoEntrega === "delivery" && (
                 <input
                   ref={enderecoRef}
                   className="campo margem-top"
@@ -419,9 +362,9 @@ ${itensTexto}
                     }
                   }}
                 />
-              ) : null}
+              )}
 
-              {tipoEntrega === "mesa" ? (
+              {tipoEntrega === "mesa" && (
                 <input
                   ref={mesaRef}
                   className="campo margem-top"
@@ -435,7 +378,7 @@ ${itensTexto}
                     }
                   }}
                 />
-              ) : null}
+              )}
 
               <div className="grid-2 margem-top">
                 <select
@@ -458,41 +401,41 @@ ${itensTexto}
 
                 <textarea
                   className="campo"
-                  placeholder='Observação. Exemplo: sem arroz, sem cebola...'
+                  placeholder="Observação: exemplo, sem arroz, sem cebola..."
                   value={observacao}
                   onChange={(e) => setObservacao(e.target.value)}
                   rows={3}
                 />
               </div>
 
-              {pagamento === "Dinheiro" ? (
-                <div style={{ marginTop: 14 }}>
-                  <div style={{ marginBottom: 10, fontWeight: 700 }}>Precisa de troco?</div>
+              {pagamento === "Dinheiro" && (
+                <div className="margem-top">
+                  <div className="troco-label">Precisa de troco?</div>
 
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <div className="tipo-entrega">
                     <button
                       type="button"
-                      onClick={() => setPrecisaTroco(true)}
                       className={precisaTroco ? "aba ativa pequena" : "aba pequena"}
+                      onClick={() => setPrecisaTroco(true)}
                     >
                       Sim
                     </button>
 
                     <button
                       type="button"
+                      className={!precisaTroco ? "aba ativa pequena" : "aba pequena"}
                       onClick={() => {
                         setPrecisaTroco(false);
                         setTrocoPara("");
                       }}
-                      className={!precisaTroco ? "aba ativa pequena" : "aba pequena"}
                     >
                       Não
                     </button>
                   </div>
 
-                  {precisaTroco ? (
+                  {precisaTroco && (
                     <input
-                      ref={trocoParaRef}
+                      ref={trocoRef}
                       className="campo margem-top"
                       style={campoStyle(erros.trocoPara)}
                       placeholder="Troco para quanto?"
@@ -504,110 +447,96 @@ ${itensTexto}
                         }
                       }}
                     />
-                  ) : null}
+                  )}
                 </div>
-              ) : null}
+              )}
             </section>
 
             <section ref={cardapioRef} className="card">
-              <h2 style={{ fontSize: "2rem", marginBottom: 18 }}>Cardápio</h2>
+              <h2 className="secao-titulo">Cardápio</h2>
 
-              {erros.carrinho ? (
-                <div style={{ marginBottom: 14, color: "#ff6b6b", fontWeight: 700 }}>
-                  Adiciona pelo menos 1 item no pedido.
-                </div>
-              ) : null}
+              {erros.carrinho && (
+                <div className="erro-texto">Adiciona pelo menos 1 item no pedido.</div>
+              )}
 
               <CategoriaBloco
                 titulo="Espetinho avulso tradicional"
                 produtos={PRODUTOS.filter((p) => p.categoria === "Espetinho avulso tradicional")}
-                onAdd={adicionar}
                 aberta={categoriaAberta === "Espetinho avulso tradicional"}
                 onToggle={() =>
-                  setCategoriaAberta(
-                    categoriaAberta === "Espetinho avulso tradicional"
-                      ? null
-                      : "Espetinho avulso tradicional"
+                  setCategoriaAberta((prev) =>
+                    prev === "Espetinho avulso tradicional" ? null : "Espetinho avulso tradicional"
                   )
                 }
+                onAdd={adicionar}
               />
 
               <CategoriaBloco
-                titulo="Espetinho avulso Premium"
-                produtos={PRODUTOS.filter((p) => p.categoria === "Espetinho avulso Premium")}
-                onAdd={adicionar}
-                aberta={categoriaAberta === "Espetinho avulso Premium"}
+                titulo="Espetinho avulso premium"
+                produtos={PRODUTOS.filter((p) => p.categoria === "Espetinho avulso premium")}
+                aberta={categoriaAberta === "Espetinho avulso premium"}
                 onToggle={() =>
-                  setCategoriaAberta(
-                    categoriaAberta === "Espetinho avulso Premium"
-                      ? null
-                      : "Espetinho avulso Premium"
+                  setCategoriaAberta((prev) =>
+                    prev === "Espetinho avulso premium" ? null : "Espetinho avulso premium"
                   )
                 }
+                onAdd={adicionar}
               />
 
               <CategoriaBloco
-                titulo="Acompanhamento + espetinho tradicional"
-                produtos={PRODUTOS.filter(
-                  (p) => p.categoria === "Acompanhamento + espetinho tradicional"
-                )}
-                onAdd={adicionar}
-                aberta={categoriaAberta === "Acompanhamento + espetinho tradicional"}
+                titulo="Acompanhamento + tradicional"
+                produtos={PRODUTOS.filter((p) => p.categoria === "Acompanhamento + tradicional")}
+                aberta={categoriaAberta === "Acompanhamento + tradicional"}
                 onToggle={() =>
-                  setCategoriaAberta(
-                    categoriaAberta === "Acompanhamento + espetinho tradicional"
-                      ? null
-                      : "Acompanhamento + espetinho tradicional"
+                  setCategoriaAberta((prev) =>
+                    prev === "Acompanhamento + tradicional" ? null : "Acompanhamento + tradicional"
                   )
                 }
+                onAdd={adicionar}
               />
 
               <CategoriaBloco
-                titulo="Acompanhamento + espetinho Premium"
-                produtos={PRODUTOS.filter(
-                  (p) => p.categoria === "Acompanhamento + espetinho Premium"
-                )}
-                onAdd={adicionar}
-                aberta={categoriaAberta === "Acompanhamento + espetinho Premium"}
+                titulo="Acompanhamento + premium"
+                produtos={PRODUTOS.filter((p) => p.categoria === "Acompanhamento + premium")}
+                aberta={categoriaAberta === "Acompanhamento + premium"}
                 onToggle={() =>
-                  setCategoriaAberta(
-                    categoriaAberta === "Acompanhamento + espetinho Premium"
-                      ? null
-                      : "Acompanhamento + espetinho Premium"
+                  setCategoriaAberta((prev) =>
+                    prev === "Acompanhamento + premium" ? null : "Acompanhamento + premium"
                   )
                 }
+                onAdd={adicionar}
               />
 
               <CategoriaBloco
                 titulo="Sucos"
                 produtos={PRODUTOS.filter((p) => p.categoria === "Sucos")}
-                onAdd={adicionar}
                 aberta={categoriaAberta === "Sucos"}
                 onToggle={() =>
-                  setCategoriaAberta(categoriaAberta === "Sucos" ? null : "Sucos")
+                  setCategoriaAberta((prev) => (prev === "Sucos" ? null : "Sucos"))
                 }
+                onAdd={adicionar}
               />
 
               <CategoriaBloco
                 titulo="Geladinho"
                 produtos={PRODUTOS.filter((p) => p.categoria === "Geladinho")}
-                onAdd={adicionar}
                 aberta={categoriaAberta === "Geladinho"}
                 onToggle={() =>
-                  setCategoriaAberta(categoriaAberta === "Geladinho" ? null : "Geladinho")
+                  setCategoriaAberta((prev) => (prev === "Geladinho" ? null : "Geladinho"))
                 }
+                onAdd={adicionar}
               />
             </section>
           </div>
         </div>
       </div>
 
-      {mostrarCarrinho ? (
+      {mostrarCarrinho && (
         <div className="overlay" onClick={() => setMostrarCarrinho(false)}>
           <div className="carrinho-modal" onClick={(e) => e.stopPropagation()}>
             <div className="carrinho-topo">
-              <h2 style={{ fontSize: "2rem", margin: 0 }}>Carrinho</h2>
-              <button onClick={() => setMostrarCarrinho(false)} className="aba" type="button">
+              <h2 className="secao-titulo" style={{ marginBottom: 0 }}>Carrinho</h2>
+              <button type="button" className="aba" onClick={() => setMostrarCarrinho(false)}>
                 Fechar
               </button>
             </div>
@@ -627,14 +556,29 @@ ${itensTexto}
                     </div>
 
                     <div className="item-acoes">
-                      <button onClick={() => diminuir(item.id)} className="mini-btn" type="button">
+                      <button
+                        type="button"
+                        className="mini-btn"
+                        onClick={() => diminuir(item.id)}
+                      >
                         -
                       </button>
+
                       <span>{item.qtd}</span>
-                      <button onClick={() => aumentar(item.id)} className="mini-btn" type="button">
+
+                      <button
+                        type="button"
+                        className="mini-btn"
+                        onClick={() => aumentar(item.id)}
+                      >
                         +
                       </button>
-                      <button onClick={() => removerDoCarrinho(item.id)} className="danger-btn" type="button">
+
+                      <button
+                        type="button"
+                        className="danger-btn"
+                        onClick={() => removerDoCarrinho(item.id)}
+                      >
                         Excluir
                       </button>
                     </div>
@@ -643,22 +587,23 @@ ${itensTexto}
               </div>
             )}
 
-            <div className="total-box" style={{ marginTop: 20 }}>
+            <div className="total-box">
               <div className="total-texto">Total: {dinheiro(total)}</div>
               <div className="muted pequeno">Sem taxa de entrega</div>
             </div>
 
             <button
+              type="button"
               onClick={enviarPedido}
               className="principal-btn"
               disabled={enviando}
               style={{ marginTop: 16 }}
-              type="button"
             >
               {enviando ? "Enviando..." : "Enviar pedido"}
             </button>
           </div>
         </div>
-      ) : null}
+      )}
     </main>
   );
+}
