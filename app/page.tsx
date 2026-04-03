@@ -1,288 +1,114 @@
-"use client";
+“use client”;
 
-import { useEffect, useMemo, useState } from "react";
-import { supabase } from "./lib/supabase";
+Import Link from “next/link”;
+Import { useMemo, useRef, useState } from “react”;
+Import { supabase } from “./lib/supabase”;
+Import { PRODUTOS, Produto, ItemCarrinho, dinheiro } from “./lib/cardapio”;
 
-type Produto = {
-  id: number;
-  nome: string;
-  preco: number;
-  categoria: string;
+Type CampoErros = {
+  Nome?: boolean;
+  Telefone?: boolean;
+  Endereco?: boolean;
+  Mesa?: boolean;
+  Pagamento?: boolean;
+  trocoPara?: boolean;
+  carrinho?: boolean;
 };
 
-type ItemCarrinho = Produto & {
-  qtd: number;
-};
-
-type Pedido = {
-  id: number;
-  nome: string;
-  telefone: string;
-  tipo_entrega: string;
-  endereco: string;
-  pagamento: string;
-  observacao: string;
-  itens: ItemCarrinho[];
-  total: number;
-  status: string;
-};
-
-const PRODUTOS: Produto[] = [
-  { id: 1, nome: "Carne", preco: 8, categoria: "Espetinho avulso tradicional" },
-  { id: 2, nome: "Misto Tradicional", preco: 8, categoria: "Espetinho avulso tradicional" },
-
-  { id: 3, nome: "Tulipa", preco: 12, categoria: "Espetinho avulso Premium" },
-  { id: 4, nome: "Medalhão de Frango", preco: 12, categoria: "Espetinho avulso Premium" },
-  { id: 5, nome: "Medalhão de Carne", preco: 12, categoria: "Espetinho avulso Premium" },
-  { id: 6, nome: "Kafta", preco: 12, categoria: "Espetinho avulso Premium" },
-
-  {
-    id: 7,
-    nome: "Simples - Farofa e Macaxeira",
-    preco: 10,
-    categoria: "Acompanhamento + espetinho tradicional",
-  },
-  {
-    id: 8,
-    nome: "Especial - Macaxeira e Vinagrete",
-    preco: 15,
-    categoria: "Acompanhamento + espetinho tradicional",
-  },
-  {
-    id: 9,
-    nome: "Completo - Arroz, Vinagrete, Farofa, Macaxeira e Banana Frita",
-    preco: 20,
-    categoria: "Acompanhamento + espetinho tradicional",
-  },
-
-  {
-    id: 10,
-    nome: "Simples Premium - Farofa e Macaxeira",
-    preco: 14,
-    categoria: "Acompanhamento + espetinho Premium",
-  },
-  {
-    id: 11,
-    nome: "Especial Premium - Macaxeira e Vinagrete",
-    preco: 18,
-    categoria: "Acompanhamento + espetinho Premium",
-  },
-  {
-    id: 12,
-    nome: "Completo Premium - Arroz, Vinagrete, Farofa, Macaxeira e Banana Frita",
-    preco: 23,
-    categoria: "Acompanhamento + espetinho Premium",
-  },
-
-  { id: 13, nome: "Maracujá 350ml", preco: 10, categoria: "Sucos" },
-  { id: 14, nome: "Acerola 350ml", preco: 8, categoria: "Sucos" },
-  { id: 15, nome: "Cupuaçu 350ml", preco: 8, categoria: "Sucos" },
-  { id: 16, nome: "Abacaxi c/ Hortelã 350ml", preco: 8, categoria: "Sucos" },
-
-  { id: 17, nome: "Ninho com Nutella", preco: 10, categoria: "Geladinho" },
-  { id: 18, nome: "Maracujá com Chocolate", preco: 10, categoria: "Geladinho" },
-  { id: 19, nome: "Pudim", preco: 10, categoria: "Geladinho" },
-  { id: 20, nome: "Oreo", preco: 10, categoria: "Geladinho" },
-  { id: 21, nome: "Ovomaltine", preco: 10, categoria: "Geladinho" },
-  { id: 22, nome: "Paçoca", preco: 10, categoria: "Geladinho" },
-];
-
-function dinheiro(valor: number) {
-  return valor.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
+Function campoStyle(erro?: boolean): React.CSSProperties {
+  Return {
+    Border: erro ? “2px solid #ff4d4f” : undefined,
+    boxShadow: erro ? “0 0 0 2px rgba(255,77,79,0.15)” : undefined,
+  };
 }
 
-function CategoriaBloco({
-  titulo,
-  produtos,
+Function CategoriaBloco({
+  Titulo,
+  Produtos,
   onAdd,
+  aberta,
+  onToggle,
 }: {
-  titulo: string;
-  produtos: Produto[];
+  Titulo: string;
+  Produtos: Produto[];
   onAdd: (produto: Produto) => void;
+  aberta: boolean;
+  onToggle: () => void;
 }) {
-  if (produtos.length === 0) return null;
+  If (produtos.length === 0) return null;
 
-  return (
-    <div>
-      <h3 className="categoria-titulo">{titulo}</h3>
-      <div className="produtos-grid">
-        {produtos.map((produto) => (
-          <button
-            key={produto.id}
-            onClick={() => onAdd(produto)}
-            className="produto-card"
-          >
-            <div className="produto-nome">{produto.nome}</div>
-            <div className="produto-preco">{dinheiro(produto.preco)}</div>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+  Return (
+    <div style={{ marginBottom: 14 }}>
+      <button
+        Type=”button”
+        onClick={onToggle}
+        style={{
+          width: “100%”,
+          display: “flex”,
+          justifyContent: “space-between”,
+          alignItems: “center”,
+          background: “#1ª1a1a”,
+          color: “#fff”,
+          border: “1px solid #333”,
+          borderRadius: 18,
+          padding: “16px 18px”,
+          fontSize: “1rem”,
+          fontWeight: 700,
+          cursor: “pointer”,
+        }}
+      >
+        <span>{titulo}</span>
+        <span>{aberta ? “▲” : “▼”}</span>
+      </button>
 
-function AdminColuna({
-  titulo,
-  quantidade,
-  children,
-}: {
-  titulo: string;
-  quantidade: number;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="card admin-coluna">
-      <div className="admin-topo">
-        <h2>{titulo}</h2>
-        <span className="badge">{quantidade}</span>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function PedidoCard({
-  pedido,
-  botaoTexto,
-  onClick,
-  onDelete,
-}: {
-  pedido: Pedido;
-  botaoTexto?: string;
-  onClick?: () => void;
-  onDelete: () => void;
-}) {
-  return (
-    <div className="pedido-card">
-      <div className="pedido-topo">
-        <div>
-          <div className="pedido-nome">{pedido.nome}</div>
-          <div className="pedido-info">{pedido.telefone}</div>
+      {aberta ? (
+        <div className=”produtos-grid” style={{ marginTop: 12 }}>
+          {produtos.map((produto) => (
+            <button
+              Key={produto.id}
+              onClick={() => onAdd(produto)}
+              className=”produto-card”
+            >
+              <div className=”produto-nome”>{produto.nome}</div>
+              <div className=”produto-preco”>{dinheiro(produto.preco)}</div>
+            </button>
+          ))}
         </div>
-        <span className="badge pequeno-badge">{pedido.tipo_entrega}</span>
-      </div>
-
-      <div className="pedido-info margem-top">{pedido.endereco}</div>
-      <div className="pedido-info margem-top">Pagamento: {pedido.pagamento}</div>
-
-      {pedido.observacao ? (
-        <div className="pedido-obs">Obs: {pedido.observacao}</div>
       ) : null}
-
-      <div className="pedido-itens">
-        {pedido.itens?.map((item, i) => (
-          <div key={i}>
-            {item.qtd}x {item.nome} - {dinheiro(item.preco * item.qtd)}
-          </div>
-        ))}
-      </div>
-
-      <div className="pedido-total">Total: {dinheiro(Number(pedido.total))}</div>
-
-      <div className="pedido-botoes">
-        {botaoTexto ? (
-          <button onClick={onClick} className="principal-btn pequeno-btn">
-            {botaoTexto}
-          </button>
-        ) : null}
-
-        <button onClick={onDelete} className="danger-btn pequeno-btn">
-          Excluir
-        </button>
-      </div>
     </div>
   );
 }
 
-export default function Page() {
-  const [aba, setAba] = useState<"cliente" | "atendente">("cliente");
+Export default function Page() {
+  Const [nome, setNome] = useState(“”);
+  Const [telefone, setTelefone] = useState(“”);
+  Const [tipoEntrega, setTipoEntrega] = useState<”delivery” | “retirada” | “mesa”>(“delivery”);
+  Const [endereco, setEndereco] = useState(“”);
+  Const [mesa, setMesa] = useState(“”);
+  Const [pagamento, setPagamento] = useState(“Pix”);
+  Const [precisaTroco, setPrecisaTroco] = useState(false);
+  Const [trocoPara, setTrocoPara] = useState(“”);
+  Const [observação, setObservacao] = useState(“”);
 
-  const [nome, setNome] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [tipoEntrega, setTipoEntrega] = useState("delivery");
-  const [endereco, setEndereco] = useState("");
-  const [pagamento, setPagamento] = useState("Pix");
-  const [observacao, setObservacao] = useState("");
+  Const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
+  Const [enviando, setEnviando] = useState(false);
+  Const [mostrarCarrinho, setMostrarCarrinho] = useState(false);
+  Const [categoriaAberta, setCategoriaAberta] = useState<string | null>(“Espetinho avulso tradicional”);
+  Const [erros, setErros] = useState<CampoErros>({});
 
-  const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
-  const [pedidos, setPedidos] = useState<Pedido[]>([]);
-  const [carregando, setCarregando] = useState(false);
-  const [enviando, setEnviando] = useState(false);
+  Const nomeRef = useRef<HTMLInputElement | null>(null);
+  Const telefoneRef = useRef<HTMLInputElement | null>(null);
+  Const enderecoRef = useRef<HTMLInputElement | null>(null);
+  Const mesaRef = useRef<HTMLInputElement | null>(null);
+  Const pagamentoRef = useRef<HTMLSelectElement | null>(null);
+  Const trocoParaRef = useRef<HTMLInputElement | null>(null);
+  Const cardapioRef = useRef<HTMLElement | null>(null);
 
-  const [pedidoParaExcluir, setPedidoParaExcluir] = useState<number | null>(null);
-  const [excluindo, setExcluindo] = useState(false);
-
-  const [linkWhatsapp, setLinkWhatsapp] = useState("");
-
-  const total = useMemo(() => {
-    return carrinho.reduce((soma, item) => soma + item.preco * item.qtd, 0);
+  Const total = useMemo(() => {
+    Return carrinho.reduce((soma, item) => soma + item.preco * item.qtd, 0);
   }, [carrinho]);
 
-  const linkWhatsappDireto = `https://wa.me/5568992252648?text=${encodeURIComponent(
-    "Olá! Gostaria de fazer um pedido. Pode me enviar o cardápio, por favor?"
-  )}`;
-
-  useEffect(() => {
-  carregarPedidos();
-
-  const channel = supabase
-    .channel("pedidos-realtime")
-    .on(
-      "postgres_changes",
-      { event: "INSERT", schema: "public", table: "pedidos" },
-      () => {
-        carregarPedidos();
-
-        if (aba === "atendente") {
-          const audio = new Audio("/notificacao.mp3");
-          audio.play().catch(() => {});
-        }
-      }
-    )
-    .on(
-      "postgres_changes",
-      { event: "UPDATE", schema: "public", table: "pedidos" },
-      () => {
-        carregarPedidos();
-      }
-    )
-    .on(
-      "postgres_changes",
-      { event: "DELETE", schema: "public", table: "pedidos" },
-      () => {
-        carregarPedidos();
-      }
-    )
-    .subscribe();
-
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, [aba]);
-
-  async function carregarPedidos() {
-    setCarregando(true);
-
-    const { data, error } = await supabase
-      .from("pedidos")
-      .select("*")
-      .order("id", { ascending: false });
-
-    if (error) {
-      console.log("ERRO CARREGAR:", error);
-      alert("Erro ao carregar pedidos do banco: " + error.message);
-      setCarregando(false);
-      return;
-    }
-
-    setPedidos((data as Pedido[]) || []);
-    setCarregando(false);
-  }
-
-  function adicionar(produto: Produto) {
+  Function adicionar(produto: Produto) {
     setCarrinho((prev) => {
       const existe = prev.find((item) => item.id === produto.id);
 
@@ -292,48 +118,120 @@ export default function Page() {
         );
       }
 
-      return [...prev, { ...produto, qtd: 1 }];
+      Return [...prev, { ...produto, qtd: 1 }];
     });
+
+    setErros((prev) => ({ ...prev, carrinho: false }));
   }
 
-  function diminuir(id: number) {
+  Function diminuir(id: number) {
     setCarrinho((prev) =>
       prev
-        .map((item) =>
-          item.id === id ? { ...item, qtd: item.qtd - 1 } : item
-        )
+        .map((item) => (item.id === id ? { ...item, qtd: item.qtd – 1 } : item))
         .filter((item) => item.qtd > 0)
     );
   }
 
-  function aumentar(id: number) {
+  Function aumentar(id: number) {
     setCarrinho((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, qtd: item.qtd + 1 } : item
-      )
+      prev.map((item) => (item.id === id ? { ...item, qtd: item.qtd + 1 } : item))
     );
   }
 
-  function removerDoCarrinho(id: number) {
+  Function removerDoCarrinho(id: number) {
     setCarrinho((prev) => prev.filter((item) => item.id !== id));
   }
 
-  function montarMensagemWhatsApp() {
-    const itensTexto = carrinho
-      .map(
-        (item) =>
-          `- ${item.qtd}x ${item.nome} (${dinheiro(item.preco * item.qtd)})`
-      )
-      .join("\n");
+  Function focarPrimeiroErro(novosErros: CampoErros) {
+    If (novosErros.nome) {
+      nomeRef.current?.scrollIntoView({ behavior: “smooth”, block: “center” });
+      nomeRef.current?.focus();
+      return;
+    }
 
-    return `🔥 *Novo pedido - Espetinho do Thalisca*
+    If (novosErros.telefone) {
+      telefoneRef.current?.scrollIntoView({ behavior: “smooth”, block: “center” });
+      telefoneRef.current?.focus();
+      return;
+    }
+
+    If (novosErros.endereco) {
+      enderecoRef.current?.scrollIntoView({ behavior: “smooth”, block: “center” });
+      enderecoRef.current?.focus();
+      return;
+    }
+
+    If (novosErros.mesa) {
+      mesaRef.current?.scrollIntoView({ behavior: “smooth”, block: “center” });
+      mesaRef.current?.focus();
+      return;
+    }
+
+    If (novosErros.pagamento) {
+      pagamentoRef.current?.scrollIntoView({ behavior: “smooth”, block: “center” });
+      pagamentoRef.current?.focus();
+      return;
+    }
+
+    If (novosErros.trocoPara) {
+      trocoParaRef.current?.scrollIntoView({ behavior: “smooth”, block: “center” });
+      trocoParaRef.current?.focus();
+      return;
+    }
+
+    If (novosErros.carrinho) {
+      cardapioRef.current?.scrollIntoView({ behavior: “smooth”, block: “start” });
+    }
+  }
+
+  Function validarFormulario() {
+    Const novosErros: CampoErros = {};
+
+    If (!nome.trim()) novosErros.nome = true;
+    If (!telefone.trim()) novosErros.telefone = true;
+    If (!pagamento.trim()) novosErros.pagamento = true;
+    If (tipoEntrega === “delivery” && !endereco.trim()) novosErros.endereco = true;
+    If (tipoEntrega === “mesa” && !mesa.trim()) novosErros.mesa = true;
+    If (pagamento === “Dinheiro” && precisaTroco && !trocoPara.trim()) {
+      novosErros.trocoPara = true;
+    }
+    If (carrinho.length === 0) novosErros.carrinho = true;
+
+    setErros(novosErros);
+
+    if (Object.keys(novosErros).length > 0) {
+      focarPrimeiroErro(novosErros);
+      return false;
+    }
+
+    Return true;
+  }
+
+  Function montarMensagemWhatsApp() {
+    Const itensTexto = carrinho
+      .map((item) => `- ${item.qtd}x ${item.nome} (${dinheiro(item.preco * item.qtd)})`)
+      .join(“\n”);
+
+    Const detalhePagamento =
+      Pagamento === “Dinheiro” && precisaTroco
+        ? `${pagamento} | Troco para ${trocoPara}`
+        : pagamento;
+
+    Const entregaTexto =
+      tipoEntrega === “delivery”
+        ? endereco
+        : tipoEntrega === “mesa”
+        ? `Mesa ${mesa}`
+        : “Retirada no local”;
+
+    Return `🔥 *Novo pedido – Espetinho do Thalisca*
 
 *Cliente:* ${nome}
 *Telefone:* ${telefone}
 *Entrega:* ${tipoEntrega}
-*Endereço:* ${endereco || "não informado"}
-*Pagamento:* ${pagamento}
-*Observação:* ${observacao || "sem observação"}
+*Local:* ${entregaTexto}
+*Pagamento:* ${detalhePagamento}
+*Observação:* ${observação || “sem observação”}
 
 *Itens:*
 ${itensTexto}
@@ -341,495 +239,381 @@ ${itensTexto}
 *Total:* ${dinheiro(total)}`;
   }
 
-  async function enviarPedido() {
-    if (!nome.trim() || !telefone.trim() || carrinho.length === 0) {
-      alert("Preenche nome, telefone e coloca item no carrinho.");
-      return;
-    }
+  Async function enviarPedido() {
+    If (!validarFormulario()) return;
 
     setEnviando(true);
 
-    const { error } = await supabase.from("pedidos").insert([
-      {
-        nome,
-        telefone,
-        tipo_entrega: tipoEntrega,
-        endereco: endereco || "não informado",
-        pagamento,
-        observacao: observacao || "",
-        itens: carrinho,
-        total,
-        status: "novo",
-      },
-    ]);
+    const enderecoFinal =
+      tipoEntrega === “delivery”
+        ? endereco
+        : tipoEntrega === “mesa”
+        ? `Mesa ${mesa}`
+        : “retirada no local”;
+
+    Const observacaoFinal =
+      Pagamento === “Dinheiro” && precisaTroco
+        ? observação
+          ? `${observação} | Troco para ${trocoPara}`
+          : `Troco para ${trocoPara}`
+        : observação || “”;
+
+    Const { data, error } = await supabase
+      .from(“pedidos”)
+      .insert([
+        {
+          Nome,
+          Telefone,
+          Tipo_entrega: tipoEntrega,
+          Endereco: enderecoFinal,
+          Pagamento,
+          Observação: observacaoFinal,
+          Itens: carrinho,
+          Total,
+          Status: “novo”,
+        },
+      ])
+      .select();
 
     setEnviando(false);
 
     if (error) {
-      console.log("ERRO ENVIAR:", error);
-      alert("Erro ao enviar pedido: " + error.message);
+      alert(“Erro ao enviar pedido: “ + error.message);
       return;
     }
 
-    const mensagem = montarMensagemWhatsApp();
-    const numero = "5568992252648";
-    const link = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
+    Const pedidoCriado = data?.[0];
+    Const mensagem = montarMensagemWhatsApp();
+    Const numero = “5568992252648”;
+    Const linkWhatsapp = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
 
-    setLinkWhatsapp(link);
+    Alert(`Pedido enviado com sucesso! Código do pedido: ${pedidoCriado?.id}`);
 
-    alert("Pedido enviado com sucesso!");
-
-    setNome("");
-    setTelefone("");
-    setTipoEntrega("delivery");
-    setEndereco("");
-    setPagamento("Pix");
-    setObservacao("");
+    setNome(“”);
+    setTelefone(“”);
+    setTipoEntrega(“delivery”);
+    setEndereco(“”);
+    setMesa(“”);
+    setPagamento(“Pix”);
+    setPrecisaTroco(false);
+    setTrocoPara(“”);
+    setObservacao(“”);
     setCarrinho([]);
-    setAba("atendente");
-    carregarPedidos();
+    setErros({});
+    setMostrarCarrinho(false);
+
+    window.open(linkWhatsapp, “_blank”);
   }
 
-  async function atualizarStatus(id: number, status: string) {
-    const { error } = await supabase
-      .from("pedidos")
-      .update({ status })
-      .eq("id", id);
-
-    if (error) {
-      console.log("ERRO UPDATE:", error);
-      alert("Erro ao atualizar status: " + error.message);
-      return;
-    }
-
-    carregarPedidos();
-  }
-
-  function pedirExclusao(id: number) {
-    setPedidoParaExcluir(id);
-  }
-
-  function cancelarExclusao() {
-    setPedidoParaExcluir(null);
-  }
-
-  async function confirmarExclusao() {
-    if (pedidoParaExcluir === null) return;
-
-    setExcluindo(true);
-
-    const { error } = await supabase
-      .from("pedidos")
-      .delete()
-      .eq("id", pedidoParaExcluir);
-
-    setExcluindo(false);
-
-    if (error) {
-      console.log("ERRO DELETE:", error);
-      alert("Erro ao excluir pedido: " + error.message);
-      return;
-    }
-
-    setPedidoParaExcluir(null);
-    carregarPedidos();
-  }
-
-  const novos = pedidos.filter((p) => p.status === "novo");
-  const preparo = pedidos.filter((p) => p.status === "preparo");
-  const concluidos = pedidos.filter((p) => p.status === "entregue");
-
-  const faturamento = concluidos.reduce(
-    (soma, pedido) => soma + Number(pedido.total),
-    0
-  );
-
-  return (
-    <main className="pagina">
-      <div className="container">
-        <div className="topo-card">
+  Return (
+    <main className=”pagina”>
+      <div className=”container”>
+        <div className=”topo-card”>
           <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
+            Style={{
+              Display: “flex”,
+              justifyContent: “space-between”,
               gap: 16,
-              alignItems: "flex-start",
-              flexWrap: "wrap",
+              alignItems: “flex-start”,
+              flexWrap: “wrap”,
             }}
           >
-            <div>
-              <h1 className="titulo-principal">🔥 Espetinho do Thalisca</h1>
-              <p className="subtitulo">"Fala comigo, fala com nós!"</p>
-            </div>
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <h1 className=”titulo-principal”>🔥 Espetinho do Thalisca</h1>
+              <p className=”subtitulo”>”Fala comigo, fala com nós!”</p>
 
-            <div
-              style={{
-                minWidth: 220,
-                background: "#111",
-                border: "1px solid #333",
-                borderRadius: 18,
-                padding: 14,
-              }}
-            >
-              <div className="muted pequeno">Faturamento finalizado</div>
-              <div
-                style={{
-                  fontSize: "2rem",
-                  fontWeight: 800,
-                  color: "#ffcc73",
-                  marginTop: 6,
-                }}
-              >
-                {dinheiro(faturamento)}
+              <div className=”info-grid”>
+                <div>📞 (68) 99225-2648</div>
+                <div>📍 Av. Diamantino Augusto de Macedo, 866 – Olaria</div>
+              </div>
+
+              <div style={{ marginTop: 16, display: “flex”, gap: 10, flexWrap: “wrap” }}>
+                <a
+                  Href=https://wa.me/5568992252648?text=Ol%C3%A1%2C%20gostaria%20de%20fazer%20um%20pedido.
+                  Target=”_blank”
+                  Rel=”noopener noreferrer”
+                  className=”principal-btn”
+                  style={{ display: “inline-block”, width: “auto”, textDecoration: “none” }}
+                >
+                  🔥 Pedir pelo WhatsApp
+                </a>
+
+                <Link href=”/acompanhar” className=”aba” style={{ textDecoration: “none” }}>
+                  Acompanhar pedido
+                </Link>
+
+                <Link href=”/painel” className=”aba” style={{ textDecoration: “none” }}>
+                  Painel do atendente
+                </Link>
               </div>
             </div>
-          </div>
 
-          <div className="info-grid">
-            <div>📞 (68) 99225-2648</div>
-            <div>📍 Av. Diamantino Augusto de Macedo, 866 - Olaria</div>
-          </div>
-
-          <div style={{ marginTop: 18 }}>
-            <a
-              href={linkWhatsappDireto}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="principal-btn"
-              style={{
-                display: "inline-block",
-                width: "auto",
-                textDecoration: "none",
-              }}
+            <button
+              onClick={() => setMostrarCarrinho(true)}
+              className=”principal-btn”
+              style={{ width: “auto”, minWidth: 120 }}
             >
-              🔥 Pedir pelo WhatsApp
-            </a>
+              🛒 {carrinho.reduce((soma, item) => soma + item.qtd, 0)}
+            </button>
           </div>
         </div>
 
-        {linkWhatsapp ? (
-          <div className="card" style={{ marginBottom: 20 }}>
-            <h3 style={{ marginTop: 0 }}>Pedido enviado</h3>
-            <p className="muted">
-              Agora toca no botão abaixo para abrir a mensagem no WhatsApp.
-            </p>
-            <a
-              href={linkWhatsapp}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="principal-btn"
-              style={{
-                display: "inline-block",
-                width: "auto",
-                textDecoration: "none",
-              }}
-            >
-              Abrir WhatsApp
-            </a>
-          </div>
-        ) : null}
+        <div className=”layout-cliente”>
+          <div className=”coluna-principal”>
+            <section className=”card”>
+              <h2 style={{ fontSize: “2rem”, marginBottom: 18 }}>Novo pedido</h2>
 
-        <div className="abas">
-          <button
-            onClick={() => setAba("cliente")}
-            className={aba === "cliente" ? "aba ativa" : "aba"}
-          >
-            App do cliente
-          </button>
-
-          <button
-            onClick={() => setAba("atendente")}
-            className={aba === "atendente" ? "aba ativa" : "aba"}
-          >
-            Painel do atendente
-          </button>
-        </div>
-
-        {aba === "cliente" ? (
-          <div className="layout-cliente">
-            <div className="coluna-principal">
-              <section className="card">
-                <h2 style={{ fontSize: "2rem", marginBottom: 18 }}>Novo pedido</h2>
-
-                <div className="grid-2">
-                  <input
-                    className="campo"
-                    placeholder="Nome do cliente"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                  />
-
-                  <input
-                    className="campo"
-                    placeholder="Telefone"
-                    value={telefone}
-                    onChange={(e) => setTelefone(e.target.value)}
-                  />
-                </div>
-
-                <div className="tipo-entrega">
-                  <button
-                    onClick={() => setTipoEntrega("delivery")}
-                    className={tipoEntrega === "delivery" ? "aba ativa pequena" : "aba pequena"}
-                  >
-                    Delivery
-                  </button>
-
-                  <button
-                    onClick={() => setTipoEntrega("retirada")}
-                    className={tipoEntrega === "retirada" ? "aba ativa pequena" : "aba pequena"}
-                  >
-                    Retirada
-                  </button>
-                </div>
-
+              <div className=”grid-2”>
                 <input
-                  className="campo margem-top"
-                  placeholder="Endereço"
-                  value={endereco}
-                  onChange={(e) => setEndereco(e.target.value)}
+                  Ref={nomeRef}
+                  className=”campo”
+                  style={campoStyle(erros.nome)}
+                  placeholder=”Nome do cliente”
+                  value={nome}
+                  onChange={(e) => {
+                    setNome(e.target.value);
+                    if (e.target.value.trim()) setErros((prev) => ({ ...prev, nome: false }));
+                  }}
                 />
 
-                <div className="grid-2 margem-top">
-                  <select
-                    className="campo"
-                    value={pagamento}
-                    onChange={(e) => setPagamento(e.target.value)}
-                  >
-                    <option>Pix</option>
-                    <option>Dinheiro</option>
-                    <option>Cartão</option>
-                  </select>
-
-                  <textarea
-                    className="campo"
-                    placeholder="Observação"
-                    value={observacao}
-                    onChange={(e) => setObservacao(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-              </section>
-
-              <section className="card">
-                <h2 style={{ fontSize: "2rem", marginBottom: 18 }}>Cardápio</h2>
-
-                <div className="categorias">
-                  <CategoriaBloco
-                    titulo="Espetinho avulso tradicional"
-                    produtos={PRODUTOS.filter(
-                      (p) => p.categoria === "Espetinho avulso tradicional"
-                    )}
-                    onAdd={adicionar}
-                  />
-
-                  <CategoriaBloco
-                    titulo="Espetinho avulso Premium"
-                    produtos={PRODUTOS.filter(
-                      (p) => p.categoria === "Espetinho avulso Premium"
-                    )}
-                    onAdd={adicionar}
-                  />
-
-                  <CategoriaBloco
-                    titulo="Acompanhamento + espetinho tradicional"
-                    produtos={PRODUTOS.filter(
-                      (p) => p.categoria === "Acompanhamento + espetinho tradicional"
-                    )}
-                    onAdd={adicionar}
-                  />
-
-                  <CategoriaBloco
-                    titulo="Acompanhamento + espetinho Premium"
-                    produtos={PRODUTOS.filter(
-                      (p) => p.categoria === "Acompanhamento + espetinho Premium"
-                    )}
-                    onAdd={adicionar}
-                  />
-
-                  <CategoriaBloco
-                    titulo="Sucos"
-                    produtos={PRODUTOS.filter((p) => p.categoria === "Sucos")}
-                    onAdd={adicionar}
-                  />
-
-                  <CategoriaBloco
-                    titulo="Geladinho"
-                    produtos={PRODUTOS.filter((p) => p.categoria === "Geladinho")}
-                    onAdd={adicionar}
-                  />
-                </div>
-              </section>
-            </div>
-
-            <aside className="card carrinho-card">
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  alignItems: "center",
-                  marginBottom: 16,
-                  flexWrap: "wrap",
-                }}
-              >
-                <h2 style={{ fontSize: "2rem", margin: 0 }}>Carrinho</h2>
-                <span className="badge">{carrinho.length} itens</span>
+                <input
+                  Ref={telefoneRef}
+                  className=”campo”
+                  style={campoStyle(erros.telefone)}
+                  placeholder=”Telefone”
+                  value={telefone}
+                  onChange={(e) => {
+                    setTelefone(e.target.value);
+                    if (e.target.value.trim()) setErros((prev) => ({ ...prev, telefone: false }));
+                  }}
+                />
               </div>
 
-              {carrinho.length === 0 ? (
-                <p className="muted">Nenhum item adicionado.</p>
-              ) : (
-                <div className="itens-carrinho">
-                  {carrinho.map((item) => (
-                    <div key={item.id} className="item-card">
-                      <div className="item-topo">
-                        <div>
-                          <div className="item-nome">{item.nome}</div>
-                          <div className="item-info">{dinheiro(item.preco)} cada</div>
-                        </div>
-                        <div className="item-total">{dinheiro(item.preco * item.qtd)}</div>
-                      </div>
+              <div className=”tipo-entrega”>
+                <button
+                  onClick={() => setTipoEntrega(“delivery”)}
+                  className={tipoEntrega === “delivery” ? “aba ativa pequena” : “aba pequena”}
+                >
+                  Delivery
+                </button>
+                <button
+                  onClick={() => setTipoEntrega(“retirada”)}
+                  className={tipoEntrega === “retirada” ? “aba ativa pequena” : “aba pequena”}
+                >
+                  Retirada
+                </button>
+                <button
+                  onClick={() => setTipoEntrega(“mesa”)}
+                  className={tipoEntrega === “mesa” ? “aba ativa pequena” : “aba pequena”}
+                >
+                  Mesa
+                </button>
+              </div>
 
-                      <div className="item-acoes">
-                        <button onClick={() => diminuir(item.id)} className="mini-btn">
-                          -
-                        </button>
-                        <span>{item.qtd}</span>
-                        <button onClick={() => aumentar(item.id)} className="mini-btn">
-                          +
-                        </button>
-                        <button onClick={() => removerDoCarrinho(item.id)} className="danger-btn">
-                          Excluir
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+              {tipoEntrega === “delivery” ? (
+                <input
+                  Ref={enderecoRef}
+                  className=”campo margem-top”
+                  style={campoStyle(erros.endereco)}
+                  placeholder=”Endereço”
+                  value={endereco}
+                  onChange={(e) => {
+                    setEndereco(e.target.value);
+                    if (e.target.value.trim()) setErros((prev) => ({ ...prev, endereco: false }));
+                  }}
+                />
+              ) : null}
+
+              {tipoEntrega === “mesa” ? (
+                <input
+                  Ref={mesaRef}
+                  className=”campo margem-top”
+                  style={campoStyle(erros.mesa)}
+                  placeholder=”Número da mesa”
+                  value={mesa}
+                  onChange={(e) => {
+                    setMesa(e.target.value);
+                    if (e.target.value.trim()) setErros((prev) => ({ ...prev, mesa: false }));
+                  }}
+                />
+              ) : null}
+
+              <div className=”grid-2 margem-top”>
+                <select
+                  Ref={pagamentoRef}
+                  className=”campo”
+                  style={campoStyle(erros.pagamento)}
+                  value={pagamento}
+                  onChange={(e) => {
+                    setPagamento(e.target.value);
+                    if (e.target.value !== “Dinheiro”) {
+                      setPrecisaTroco(false);
+                      setTrocoPara(“”);
+                    }
+                  }}
+                >
+                  <option>Pix</option>
+                  <option>Dinheiro</option>
+                  <option>Cartão</option>
+                </select>
+
+                <textarea
+                  className=”campo”
+                  placeholder=”Observação”
+                  value={observação}
+                  onChange={(e) => setObservacao(e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              {pagamento === “Dinheiro” ? (
+                <div style={{ marginTop: 14 }}>
+                  <div style={{ marginBottom: 10, fontWeight: 700 }}>Precisa de troco?</div>
+
+                  <div style={{ display: “flex”, gap: 10, flexWrap: “wrap” }}>
+                    <button
+                      Type=”button”
+                      onClick={() => setPrecisaTroco(true)}
+                      className={precisaTroco ? “aba ativa pequena” : “aba pequena”}
+                    >
+                      Sim
+                    </button>
+
+                    <button
+                      Type=”button”
+                      onClick={() => {
+                        setPrecisaTroco(false);
+                        setTrocoPara(“”);
+                      }}
+                      className={!precisaTroco ? “aba ativa pequena” : “aba pequena”}
+                    >
+                      Não
+                    </button>
+                  </div>
+
+                  {precisaTroco ? (
+                    <input
+                      Ref={trocoParaRef}
+                      className=”campo margem-top”
+                      style={campoStyle(erros.trocoPara)}
+                      placeholder=”Troco para quanto?”
+                      value={trocoPara}
+                      onChange={(e) => {
+                        setTrocoPara(e.target.value);
+                        if (e.target.value.trim()) setErros((prev) => ({ ...prev, trocoPara: false }));
+                      }}
+                    />
+                  ) : null}
                 </div>
-              )}
+              ) : null}
+            </section>
 
-              <div className="total-box">
-                <div className="total-texto">Total: {dinheiro(total)}</div>
-                <div className="muted pequeno">Sem taxa de entrega</div>
-              </div>
+            <section ref={cardapioRef} className=”card”>
+              <h2 style={{ fontSize: “2rem”, marginBottom: 18 }}>Cardápio</h2>
 
-              <button onClick={enviarPedido} className="principal-btn" disabled={enviando}>
-                {enviando ? "Enviando..." : "Enviar pedido"}
-              </button>
-            </aside>
-          </div>
-        ) : (
-          <div className="layout-admin">
-            <AdminColuna titulo="Novos" quantidade={novos.length}>
-              {carregando ? (
-                <p className="muted">Carregando...</p>
-              ) : novos.length === 0 ? (
-                <p className="muted">Nenhum pedido</p>
-              ) : (
-                novos.map((pedido) => (
-                  <PedidoCard
-                    key={pedido.id}
-                    pedido={pedido}
-                    botaoTexto="Aceitar pedido"
-                    onClick={() => atualizarStatus(pedido.id, "preparo")}
-                    onDelete={() => pedirExclusao(pedido.id)}
-                  />
-                ))
-              )}
-            </AdminColuna>
+              {erros.carrinho ? (
+                <div style={{ marginBottom: 14, color: “#ff6b6b”, fontWeight: 700 }}>
+                  Adiciona pelo menos 1 item no pedido.
+                </div>
+              ) : null}
 
-            <AdminColuna titulo="Em preparo" quantidade={preparo.length}>
-              {preparo.length === 0 ? (
-                <p className="muted">Nenhum pedido</p>
-              ) : (
-                preparo.map((pedido) => (
-                  <PedidoCard
-                    key={pedido.id}
-                    pedido={pedido}
-                    botaoTexto="Marcar como entregue"
-                    onClick={() => atualizarStatus(pedido.id, "entregue")}
-                    onDelete={() => pedirExclusao(pedido.id)}
-                  />
-                ))
-              )}
-            </AdminColuna>
+              <CategoriaBloco
+                Titulo=”Espetinho avulso tradicional”
+                Produtos={PRODUTOS.filter((p) => p.categoria === “Espetinho avulso tradicional”)}
+                onAdd={adicionar}
+                aberta={categoriaAberta === “Espetinho avulso tradicional”}
+                onToggle={() =>
+                  setCategoriaAberta(
+                    categoriaAberta === “Espetinho avulso tradicional”
+                      ? null
+                      : “Espetinho avulso tradicional”
+                  )
+                }
+              />
 
-            <AdminColuna titulo="Entregues" quantidade={concluidos.length}>
-              {concluidos.length === 0 ? (
-                <p className="muted">Nenhum concluído</p>
-              ) : (
-                concluidos.map((pedido) => (
-                  <PedidoCard
-                    key={pedido.id}
-                    pedido={pedido}
-                    onDelete={() => pedirExclusao(pedido.id)}
-                  />
-                ))
-              )}
-            </AdminColuna>
+              <CategoriaBloco
+                Titulo=”Espetinho avulso Premium”
+                Produtos={PRODUTOS.filter((p) => p.categoria === “Espetinho avulso Premium”)}
+                onAdd={adicionar}
+                aberta={categoriaAberta === “Espetinho avulso Premium”}
+                onToggle={() =>
+                  setCategoriaAberta(
+                    categoriaAberta === “Espetinho avulso Premium”
+                      ? null
+                      : “Espetinho avulso Premium”
+                  )
+                }
+              />
 
-            <AdminColuna titulo="Resumo" quantidade={pedidos.length}>
-              <div className="resumo-box">
-                <div>Total de pedidos: {pedidos.length}</div>
-                <div>Concluídos: {concluidos.length}</div>
-                <div className="faturamento">Faturamento: {dinheiro(faturamento)}</div>
-              </div>
-            </AdminColuna>
-          </div>
-        )}
-      </div>
+              <CategoriaBloco
+                Titulo=”Acompanhamento + espetinho tradicional”
+                Produtos={PRODUTOS.filter(
+                  (p) => p.categoria === “Acompanhamento + espetinho tradicional”
+                )}
+                onAdd={adicionar}
+                aberta={categoriaAberta === “Acompanhamento + espetinho tradicional”}
+                onToggle={() =>
+                  setCategoriaAberta(
+                    categoriaAberta === “Acompanhamento + espetinho tradicional”
+                      ? null
+                      : “Acompanhamento + espetinho tradicional”
+                  )
+                }
+              />
 
-      {pedidoParaExcluir !== null ? (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.65)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-            zIndex: 9999,
-          }}
-        >
-          <div
-            style={{
-              width: "100%",
-              maxWidth: 420,
-              background: "#151515",
-              border: "1px solid #333",
-              borderRadius: 24,
-              padding: 22,
-              boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
-            }}
-          >
-            <h3 style={{ marginTop: 0, marginBottom: 10 }}>Excluir pedido?</h3>
-            <p style={{ color: "#cfcfcf", marginBottom: 20 }}>
-              Essa ação vai remover o pedido do painel.
-            </p>
+              <CategoriaBloco
+                Titulo=”Acompanhamento + espetinho Premium”
+                Produtos={PRODUTOS.filter(
+                  (p) => p.categoria === “Acompanhamento + espetinho Premium”
+                )}
+                onAdd={adicionar}
+                aberta={categoriaAberta === “Acompanhamento + espetinho Premium”}
+                onToggle={() =>
+                  setCategoriaAberta(
+                    categoriaAberta === “Acompanhamento + espetinho Premium”
+                      ? null
+                      : “Acompanhamento + espetinho Premium”
+                  )
+                }
+              />
 
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <button
-                onClick={cancelarExclusao}
-                className="aba"
-                style={{ minWidth: 120 }}
-                disabled={excluindo}
-              >
-                Cancelar
-              </button>
+              <CategoriaBloco
+                Titulo=”Sucos”
+                Produtos={PRODUTOS.filter((p) => p.categoria === “Sucos”)}
+                onAdd={adicionar}
+                aberta={categoriaAberta === “Sucos”}
+                onToggle={() => setCategoriaAberta(categoriaAberta === “Sucos” ? null : “Sucos”)}
+              />
 
-              <button
-                onClick={confirmarExclusao}
-                className="danger-btn"
-                style={{ minWidth: 120 }}
-                disabled={excluindo}
-              >
-                {excluindo ? "Excluindo..." : "Confirmar"}
-              </button>
-            </div>
+              <CategoriaBloco
+                Titulo=”Geladinho”
+                Produtos={PRODUTOS.filter((p) => p.categoria === “Geladinho”)}
+                onAdd={adicionar}
+                aberta={categoriaAberta === “Geladinho”}
+                onToggle={() =>
+                  setCategoriaAberta(categoriaAberta === “Geladinho” ? null : “Geladinho”)
+                }
+              />
+            </section>
           </div>
         </div>
-      ) : null}
-    </main>
-  );
-}
+      </div>
+
+      {mostrarCarrinho ? (
+        <div
+          Style={{
+            Position: “fixed”,
+            Inset: 0,
+            Background: “rgba(0,0,0,0.65)”,
+            Display: “flex”,
+            justifyContent: “flex-end”,
+            zIndex: 9999,
+          }}
+          onClick={() => setMostrarCarrinho(false)}
+        >
+          <div
+            Style={{
+              Width: “100%”,
+              maxWidth: 420,
+          
+
