@@ -125,9 +125,9 @@ textarea {
 
 .cart-button {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 999;
+  top: 16px;
+  right: 16px;
+  z-index: 9999;
   width: 62px;
   height: 62px;
   border: none;
@@ -225,17 +225,15 @@ textarea {
 }
 
 .hero-stats {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 14px;
-  align-items: stretch;
-  justify-content: center;
   width: 100%;
+  max-width: 520px;
   margin-top: 22px;
-  flex-wrap: wrap;
 }
 
 .hero-stat-card {
-  min-width: 220px;
   text-align: center;
   border-radius: var(--radius-lg);
   border: 1px solid var(--line);
@@ -390,8 +388,8 @@ textarea.field {
   background: linear-gradient(180deg, #17171a 0%, #131316 100%);
   color: #fff;
   border-radius: 22px;
-  padding: 16px 18px;
-  min-height: 104px;
+  padding: 16px 14px;
+  min-height: 96px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -407,25 +405,28 @@ textarea.field {
 .produto-info {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   align-items: flex-start;
 }
 
 .produto-nome {
   font-weight: 800;
   line-height: 1.35;
+  font-size: 0.98rem;
 }
 
 .produto-preco {
   color: var(--gold-1);
   font-weight: 800;
   white-space: nowrap;
+  font-size: 0.98rem;
 }
 
 .produto-cta {
-  margin-top: 14px;
+  margin-top: 12px;
   color: #a7acb8;
   font-size: 0.92rem;
+  text-align: center;
 }
 
 .cart-overlay {
@@ -607,7 +608,6 @@ textarea.field {
 
 @media (max-width: 920px) {
   .form-grid,
-  .produtos-grid,
   .adm-grid {
     grid-template-columns: 1fr;
   }
@@ -618,8 +618,7 @@ textarea.field {
   }
 
   .hero-stats {
-    flex-direction: column;
-    align-items: center;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -648,5 +647,12 @@ textarea.field {
 
   .produto-card {
     min-height: 94px;
+  }
+
+  .cart-button {
+    top: 14px;
+    right: 14px;
+    width: 58px;
+    height: 58px;
   }
 }

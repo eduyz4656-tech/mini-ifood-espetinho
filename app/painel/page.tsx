@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 type ItemPedido = {
@@ -69,8 +69,55 @@ export default function PainelPage() {
   const [autorizado, setAutorizado] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
+  const [limpando, setLimpando] = useState(false);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [pedidoSelecionado, setPedidoSelecionado] = useState<Pedido | null>(null);
+
+  const [busca, setBusca] = useState("");
+  const [filtroStatus, setFiltroStatus] = useState<"todos" | "novo" | "preparo" | "entregue">("todos");
+
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const lastPedidoIdRef = useRef<number | null>(null);
+  const jaInicializouRef = useRef(false);
+
+  function tocarSomNovoPedido() {
+    try {
+      const AudioContextClass =
+        window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+      if (!AudioContextClass) return;
+
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContextClass();
+      }
+
+      const ctx = audioCtxRef.current;
+      const now = ctx.currentTime;
+
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc1.type = "sine";
+      osc2.type = "triangle";
+
+      osc1.frequency.setValueAtTime(880, now);
+      osc2.frequency.setValueAtTime(1174, now);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.12, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc1.start(now);
+      osc2.start(now + 0.02);
+      osc1.stop(now + 0.4);
+      osc2.stop(now + 0.4);
+    } catch {}
+  }
 
   useEffect(() => {
     const salvo = sessionStorage.getItem("adm-autorizado");
@@ -114,7 +161,9 @@ export default function PainelPage() {
       .select("*")
       .order("id", { ascending: false });
 
-    setPedidos((data as Pedido[]) || []);
+    const lista = (data as Pedido[]) || [];
+    processarNovosPedidos(lista, false);
+    setPedidos(lista);
     setCarregando(false);
   }
 
@@ -124,7 +173,30 @@ export default function PainelPage() {
       .select("*")
       .order("id", { ascending: false });
 
-    setPedidos((data as Pedido[]) || []);
+    const lista = (data as Pedido[]) || [];
+    processarNovosPedidos(lista, true);
+    setPedidos(lista);
+  }
+
+  function processarNovosPedidos(lista: Pedido[], permitirSom: boolean) {
+    const maiorId = lista.length > 0 ? Math.max(...lista.map((p) => Number(p.id))) : null;
+
+    if (!jaInicializouRef.current) {
+      lastPedidoIdRef.current = maiorId;
+      jaInicializouRef.current = true;
+      return;
+    }
+
+    if (
+      permitirSom &&
+      maiorId !== null &&
+      lastPedidoIdRef.current !== null &&
+      maiorId > lastPedidoIdRef.current
+    ) {
+      tocarSomNovoPedido();
+    }
+
+    lastPedidoIdRef.current = maiorId;
   }
 
   function entrar() {
@@ -145,6 +217,8 @@ export default function PainelPage() {
     setPedidos([]);
     setPedidoSelecionado(null);
     setCarregando(false);
+    jaInicializouRef.current = false;
+    lastPedidoIdRef.current = null;
   }
 
   async function mudarStatus(id: number, status: "novo" | "preparo" | "entregue") {
@@ -159,27 +233,117 @@ export default function PainelPage() {
     await buscarPedidosSilencioso();
 
     if (pedidoSelecionado?.id === id) {
-      const atualizado = pedidos.find((p) => p.id === id);
-      if (atualizado) {
-        setPedidoSelecionado({ ...atualizado, status });
-      }
+      setPedidoSelecionado((prev) => (prev ? { ...prev, status } : prev));
     }
 
     setAtualizando(false);
   }
 
-  const novos = useMemo(() => pedidos.filter((p) => p.status === "novo"), [pedidos]);
-  const preparo = useMemo(() => pedidos.filter((p) => p.status === "preparo"), [pedidos]);
-  const entregues = useMemo(() => pedidos.filter((p) => p.status === "entregue"), [pedidos]);
+  async function apagarEntregues() {
+    const confirmar = confirm("Apagar todos os pedidos entregues?");
+    if (!confirmar) return;
+
+    setLimpando(true);
+
+    const { error } = await supabase
+      .from("pedidos")
+      .delete()
+      .eq("status", "entregue");
+
+    if (error) {
+      alert("Erro ao apagar pedidos entregues.");
+    }
+
+    await buscarPedidosSilencioso();
+    setPedidoSelecionado(null);
+    setLimpando(false);
+  }
+
+  function imprimirPedido(pedido: Pedido) {
+    const itensTexto = (pedido.itens || [])
+      .map(
+        (item) =>
+          `${item.qtd}x ${item.nome} - ${dinheiro(Number(item.preco || 0) * Number(item.qtd || 0))}`
+      )
+      .join("\n");
+
+    const conteudo = `
+ADM - Espetinho do Thalisca
+
+Pedido #${pedido.id}
+Status: ${nomeStatus(pedido.status)}
+
+Cliente: ${pedido.nome}
+Telefone: ${pedido.telefone}
+Entrega: ${pedido.tipo_entrega}
+Local: ${pedido.endereco}
+Pagamento: ${pedido.pagamento}
+
+Observação:
+${pedido.observacao || "Sem observação"}
+
+Itens:
+${itensTexto || "Sem itens"}
+
+Total:
+${dinheiro(Number(pedido.total || 0))}
+    `.trim();
+
+    const janela = window.open("", "_blank", "width=700,height=900");
+    if (!janela) return;
+
+    janela.document.write(`
+      <html>
+        <head>
+          <title>Pedido #${pedido.id}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              padding: 24px;
+              white-space: pre-wrap;
+              line-height: 1.5;
+            }
+          </style>
+        </head>
+        <body>${conteudo.replace(/\n/g, "<br/>")}</body>
+      </html>
+    `);
+    janela.document.close();
+    janela.focus();
+    janela.print();
+  }
+
+  const pedidosFiltrados = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+
+    return pedidos.filter((pedido) => {
+      const bateBusca =
+        termo === "" ||
+        pedido.nome?.toLowerCase().includes(termo) ||
+        pedido.telefone?.toLowerCase().includes(termo) ||
+        String(pedido.id).includes(termo);
+
+      const bateStatus = filtroStatus === "todos" || pedido.status === filtroStatus;
+
+      return bateBusca && bateStatus;
+    });
+  }, [pedidos, busca, filtroStatus]);
+
+  const novos = useMemo(() => pedidosFiltrados.filter((p) => p.status === "novo"), [pedidosFiltrados]);
+  const preparo = useMemo(() => pedidosFiltrados.filter((p) => p.status === "preparo"), [pedidosFiltrados]);
+  const entregues = useMemo(() => pedidosFiltrados.filter((p) => p.status === "entregue"), [pedidosFiltrados]);
 
   const faturamento = useMemo(() => {
-    return entregues.reduce((acc, pedido) => acc + Number(pedido.total || 0), 0);
-  }, [entregues]);
+    return pedidos
+      .filter((p) => p.status === "entregue")
+      .reduce((acc, pedido) => acc + Number(pedido.total || 0), 0);
+  }, [pedidos]);
 
   const ticketMedio = useMemo(() => {
-    if (entregues.length === 0) return 0;
-    return faturamento / entregues.length;
-  }, [entregues, faturamento]);
+    const entreguesBase = pedidos.filter((p) => p.status === "entregue");
+    if (entreguesBase.length === 0) return 0;
+    return faturamento / entreguesBase.length;
+  }, [pedidos, faturamento]);
 
   if (!autorizado) {
     return (
@@ -231,6 +395,10 @@ export default function PainelPage() {
                 Ver cliente
               </Link>
 
+              <button onClick={apagarEntregues} style={styles.warningButton}>
+                {limpando ? "Limpando..." : "Limpar entregues"}
+              </button>
+
               <button onClick={sair} style={styles.dangerButton}>
                 Sair
               </button>
@@ -240,17 +408,17 @@ export default function PainelPage() {
           <div style={styles.statsGrid}>
             <div style={styles.statCard}>
               <span style={styles.statLabel}>Novos</span>
-              <strong style={styles.statValue}>{novos.length}</strong>
+              <strong style={styles.statValue}>{pedidos.filter((p) => p.status === "novo").length}</strong>
             </div>
 
             <div style={styles.statCard}>
               <span style={styles.statLabel}>Em preparo</span>
-              <strong style={styles.statValue}>{preparo.length}</strong>
+              <strong style={styles.statValue}>{pedidos.filter((p) => p.status === "preparo").length}</strong>
             </div>
 
             <div style={styles.statCard}>
               <span style={styles.statLabel}>Entregues</span>
-              <strong style={styles.statValue}>{entregues.length}</strong>
+              <strong style={styles.statValue}>{pedidos.filter((p) => p.status === "entregue").length}</strong>
             </div>
 
             <div style={styles.statCard}>
@@ -265,13 +433,33 @@ export default function PainelPage() {
               </strong>
             </div>
           </div>
+
+          <div style={styles.filtersBar}>
+            <input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar por nome, telefone ou número do pedido"
+              style={styles.searchInput}
+            />
+
+            <select
+              value={filtroStatus}
+              onChange={(e) => setFiltroStatus(e.target.value as "todos" | "novo" | "preparo" | "entregue")}
+              style={styles.select}
+            >
+              <option value="todos">Todos os status</option>
+              <option value="novo">Novos</option>
+              <option value="preparo">Em preparo</option>
+              <option value="entregue">Entregues</option>
+            </select>
+          </div>
         </section>
 
         {carregando ? (
           <section style={styles.card}>
             <div style={styles.sectionHeader}>
               <h2 style={styles.sectionTitle}>Carregando pedidos...</h2>
-              <p style={styles.sectionText}>Buscando os dados no Supabase.</p>
+              <p style={styles.sectionText}>Buscando os dados no sistema.</p>
             </div>
           </section>
         ) : (
@@ -282,6 +470,7 @@ export default function PainelPage() {
               pedidos={novos}
               vazio="Nenhum pedido novo."
               onAbrir={(pedido) => setPedidoSelecionado(pedido)}
+              onImprimir={(pedido) => imprimirPedido(pedido)}
               acaoLabel="Colocar em preparo"
               onAcao={(id) => mudarStatus(id, "preparo")}
             />
@@ -292,6 +481,7 @@ export default function PainelPage() {
               pedidos={preparo}
               vazio="Nenhum pedido em preparo."
               onAbrir={(pedido) => setPedidoSelecionado(pedido)}
+              onImprimir={(pedido) => imprimirPedido(pedido)}
               acaoLabel="Marcar como entregue"
               onAcao={(id) => mudarStatus(id, "entregue")}
             />
@@ -302,13 +492,12 @@ export default function PainelPage() {
               pedidos={entregues}
               vazio="Nenhum pedido entregue."
               onAbrir={(pedido) => setPedidoSelecionado(pedido)}
+              onImprimir={(pedido) => imprimirPedido(pedido)}
             />
           </section>
         )}
 
-        {atualizando ? (
-          <div style={styles.syncBadge}>Atualizando status...</div>
-        ) : null}
+        {atualizando ? <div style={styles.syncBadge}>Atualizando status...</div> : null}
       </div>
 
       {pedidoSelecionado ? (
@@ -320,9 +509,18 @@ export default function PainelPage() {
                 <h2 style={{ ...styles.sectionTitle, marginTop: 12 }}>Detalhes do pedido</h2>
               </div>
 
-              <button onClick={() => setPedidoSelecionado(null)} style={styles.secondaryButton}>
-                Fechar
-              </button>
+              <div style={styles.modalTopButtons}>
+                <button
+                  onClick={() => imprimirPedido(pedidoSelecionado)}
+                  style={styles.warningButton}
+                >
+                  Imprimir
+                </button>
+
+                <button onClick={() => setPedidoSelecionado(null)} style={styles.secondaryButton}>
+                  Fechar
+                </button>
+              </div>
             </div>
 
             <div
@@ -343,10 +541,7 @@ export default function PainelPage() {
               <InfoBox label="Entrega" valor={pedidoSelecionado.tipo_entrega} />
               <InfoBox label="Pagamento" valor={pedidoSelecionado.pagamento} />
               <InfoBox label="Local" valor={pedidoSelecionado.endereco} />
-              <InfoBox
-                label="Total"
-                valor={dinheiro(Number(pedidoSelecionado.total || 0))}
-              />
+              <InfoBox label="Total" valor={dinheiro(Number(pedidoSelecionado.total || 0))} />
             </div>
 
             {pedidoSelecionado.observacao ? (
@@ -411,6 +606,7 @@ function ColunaPedidos({
   pedidos,
   vazio,
   onAbrir,
+  onImprimir,
   acaoLabel,
   onAcao,
 }: {
@@ -419,6 +615,7 @@ function ColunaPedidos({
   pedidos: Pedido[];
   vazio: string;
   onAbrir: (pedido: Pedido) => void;
+  onImprimir: (pedido: Pedido) => void;
   acaoLabel?: string;
   onAcao?: (id: number) => void;
 }) {
@@ -453,9 +650,9 @@ function ColunaPedidos({
                 </div>
 
                 <div style={styles.orderName}>{pedido.nome}</div>
-
-                <div style={styles.orderMeta}>{pedido.tipo_entrega} • {pedido.pagamento}</div>
-
+                <div style={styles.orderMeta}>
+                  {pedido.tipo_entrega} • {pedido.pagamento}
+                </div>
                 <div style={styles.orderAddress}>{pedido.endereco}</div>
 
                 <div style={styles.orderBottom}>
@@ -463,9 +660,15 @@ function ColunaPedidos({
                     {dinheiro(Number(pedido.total || 0))}
                   </div>
 
-                  <button onClick={() => onAbrir(pedido)} style={styles.miniButton}>
-                    Ver
-                  </button>
+                  <div style={styles.cardActionsMini}>
+                    <button onClick={() => onAbrir(pedido)} style={styles.miniButton}>
+                      Ver
+                    </button>
+
+                    <button onClick={() => onImprimir(pedido)} style={styles.printButton}>
+                      Imprimir
+                    </button>
+                  </div>
                 </div>
 
                 {acaoLabel && onAcao ? (
@@ -586,6 +789,33 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 900,
   },
 
+  filtersBar: {
+    display: "grid",
+    gridTemplateColumns: "1.5fr 0.8fr",
+    gap: 12,
+    marginTop: 18,
+  },
+
+  searchInput: {
+    width: "100%",
+    background: "linear-gradient(180deg, #111114 0%, #16161a 100%)",
+    color: "#fff",
+    border: "1px solid rgba(255,255,255,0.10)",
+    borderRadius: 18,
+    padding: "16px 18px",
+    outline: "none",
+  },
+
+  select: {
+    width: "100%",
+    background: "linear-gradient(180deg, #111114 0%, #16161a 100%)",
+    color: "#fff",
+    border: "1px solid rgba(255,255,255,0.10)",
+    borderRadius: 18,
+    padding: "16px 18px",
+    outline: "none",
+  },
+
   card: {
     background: "linear-gradient(180deg, rgba(18,18,20,0.96) 0%, rgba(15,15,17,0.95) 100%)",
     border: "1px solid rgba(255,255,255,0.08)",
@@ -666,6 +896,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     gap: 10,
     marginTop: 14,
+    flexWrap: "wrap",
   },
 
   orderTotal: {
@@ -685,10 +916,26 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 800,
   },
 
+  cardActionsMini: {
+    display: "flex",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+
   miniButton: {
     background: "#2a2a31",
     color: "#fff",
     border: "none",
+    borderRadius: 12,
+    padding: "9px 14px",
+    fontWeight: 800,
+    cursor: "pointer",
+  },
+
+  printButton: {
+    background: "rgba(255, 216, 122, 0.14)",
+    color: "#ffd87a",
+    border: "1px solid rgba(255, 216, 122, 0.28)",
     borderRadius: 12,
     padding: "9px 14px",
     fontWeight: 800,
@@ -743,6 +990,19 @@ const styles: Record<string, React.CSSProperties> = {
     border: "none",
     color: "#fff",
     fontWeight: 800,
+    cursor: "pointer",
+  },
+
+  warningButton: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 16,
+    padding: "12px 16px",
+    background: "linear-gradient(180deg, #ffd87a 0%, #ffb938 100%)",
+    border: "none",
+    color: "#111",
+    fontWeight: 900,
     cursor: "pointer",
   },
 
@@ -808,6 +1068,12 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: "space-between",
     gap: 12,
     alignItems: "flex-start",
+    flexWrap: "wrap",
+  },
+
+  modalTopButtons: {
+    display: "flex",
+    gap: 10,
     flexWrap: "wrap",
   },
 

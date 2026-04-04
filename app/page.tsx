@@ -272,6 +272,20 @@ export default function Page() {
   }
 
   async function enviarPedido() {
+    if (carrinho.length === 0) {
+      setErros((prev) => ({ ...prev, carrinho: true }));
+      setMostrarCarrinho(false);
+
+      setTimeout(() => {
+        cardapioRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 150);
+
+      return;
+    }
+
     if (!validar()) return;
 
     setEnviando(true);
