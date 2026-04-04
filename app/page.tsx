@@ -1,565 +1,605 @@
-"use client";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Sora:wght@600;700;800&display=swap');
 
-import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "./lib/supabase";
-import { PRODUTOS, Produto, ItemCarrinho, dinheiro } from "./lib/cardapio";
-
-type CampoErros = {
-  nome?: boolean;
-  telefone?: boolean;
-  endereco?: boolean;
-  mesa?: boolean;
-  pagamento?: boolean;
-  trocoPara?: boolean;
-  carrinho?: boolean;
-};
-
-function estiloErro(erro?: boolean): React.CSSProperties {
-  return erro
-    ? {
-        border: "2px solid #ff5b5b",
-        boxShadow: "0 0 0 2px rgba(255, 91, 91, 0.12)",
-      }
-    : {};
+:root {
+  --bg: #070707;
+  --bg-soft: #101010;
+  --card: rgba(18, 18, 18, 0.92);
+  --card-2: rgba(24, 24, 24, 0.96);
+  --line: rgba(255, 255, 255, 0.08);
+  --text: #f8f8f8;
+  --muted: #b8b8b8;
+  --gold-1: #ffd67a;
+  --gold-2: #ffb938;
+  --danger: #ff5f6d;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius-md: 18px;
 }
 
-function CategoriaSecao({
-  titulo,
-  produtos,
-  onAdd,
-}: {
-  titulo: string;
-  produtos: Produto[];
-  onAdd: (produto: Produto) => void;
-}) {
-  if (!produtos.length) return null;
-
-  return (
-    <div className="categoria-secao">
-      <h3 className="categoria-titulo">{titulo}</h3>
-
-      <div className="produtos-grid">
-        {produtos.map((produto) => (
-          <button
-            key={produto.id}
-            type="button"
-            className="produto-card"
-            onClick={() => onAdd(produto)}
-          >
-            <div className="produto-nome">{produto.nome}</div>
-            <div className="produto-preco">{dinheiro(produto.preco)}</div>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+* {
+  box-sizing: border-box;
 }
 
-export default function Page() {
-  const router = useRouter();
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
 
-  const [nome, setNome] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [tipoEntrega, setTipoEntrega] = useState<"delivery" | "retirada" | "mesa">("delivery");
-  const [endereco, setEndereco] = useState("");
-  const [mesa, setMesa] = useState("");
-  const [pagamento, setPagamento] = useState("Pix");
-  const [precisaTroco, setPrecisaTroco] = useState(false);
-  const [trocoPara, setTrocoPara] = useState("");
-  const [observacao, setObservacao] = useState("");
+body {
+  min-height: 100vh;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(255, 196, 86, 0.14), transparent 24%),
+    radial-gradient(circle at 85% 10%, rgba(255, 153, 0, 0.08), transparent 20%),
+    linear-gradient(180deg, #090909 0%, #0e0e0e 48%, #121212 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
 
-  const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
-  const [mostrarCarrinho, setMostrarCarrinho] = useState(false);
-  const [enviando, setEnviando] = useState(false);
-  const [erros, setErros] = useState<CampoErros>({});
+a {
+  color: inherit;
+  text-decoration: none;
+}
 
-  const nomeRef = useRef<HTMLInputElement | null>(null);
-  const telefoneRef = useRef<HTMLInputElement | null>(null);
-  const enderecoRef = useRef<HTMLInputElement | null>(null);
-  const mesaRef = useRef<HTMLInputElement | null>(null);
-  const pagamentoRef = useRef<HTMLSelectElement | null>(null);
-  const trocoRef = useRef<HTMLInputElement | null>(null);
-  const cardapioRef = useRef<HTMLElement | null>(null);
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
 
-  const total = useMemo(() => {
-    return carrinho.reduce((soma, item) => soma + item.preco * item.qtd, 0);
-  }, [carrinho]);
+.pagina {
+  min-height: 100vh;
+}
 
-  function adicionar(produto: Produto) {
-    setCarrinho((prev) => {
-      const existe = prev.find((item) => item.id === produto.id);
+.container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 20px;
+}
 
-      if (existe) {
-        return prev.map((item) =>
-          item.id === produto.id ? { ...item, qtd: item.qtd + 1 } : item
-        );
-      }
+.hero-card,
+.card,
+.hero-mini-card,
+.item-card,
+.total-box {
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
 
-      return [...prev, { ...produto, qtd: 1 }];
-    });
+.hero-card,
+.card {
+  background: linear-gradient(180deg, rgba(20,20,20,0.96) 0%, rgba(16,16,16,0.94) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+}
 
-    setErros((prev) => ({ ...prev, carrinho: false }));
+.hero-card {
+  padding: 28px;
+  margin-bottom: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(255, 196, 86, 0.10), transparent 26%),
+    linear-gradient(180deg, transparent, rgba(255,255,255,0.01));
+  pointer-events: none;
+}
+
+.card {
+  padding: 22px;
+}
+
+.top-fixed-actions {
+  position: sticky;
+  top: 16px;
+  z-index: 100;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.botao-carrinho-fixo {
+  width: auto;
+  min-width: 92px;
+  border-radius: 999px;
+  padding: 13px 18px;
+}
+
+.hero-topo {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.hero-badge {
+  display: inline-flex;
+  background: rgba(255, 196, 86, 0.08);
+  border: 1px solid rgba(255, 196, 86, 0.18);
+  color: var(--gold-1);
+  border-radius: 999px;
+  padding: 9px 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.hero-instagram {
+  color: #f6d799;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: 0.4px;
+}
+
+.hero-titulo {
+  margin: 0;
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(2.5rem, 5.4vw, 4.8rem);
+  line-height: 0.95;
+  letter-spacing: -2px;
+  color: #ffd98a;
+  text-shadow: 0 0 30px rgba(255, 185, 56, 0.08);
+}
+
+.hero-subtitulo {
+  max-width: 720px;
+  margin: 14px auto 0;
+  color: #d5d5d5;
+  font-size: 1.08rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.hero-info {
+  display: grid;
+  gap: 8px;
+  margin-top: 22px;
+  color: #ececec;
+  font-weight: 600;
+}
+
+.hero-acoes {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.hero-resumo-centro {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+  justify-content: center;
+  width: 100%;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.destaque-centro {
+  min-width: 220px;
+  text-align: center;
+}
+
+.hero-mini-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(22,22,22,0.92) 0%, rgba(16,16,16,0.9) 100%);
+  padding: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.hero-mini-card span {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.hero-mini-card strong {
+  font-size: 2rem;
+  color: var(--gold-1);
+  line-height: 1;
+}
+
+.conteudo-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.sem-carrinho-lateral {
+  grid-template-columns: 1fr;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.secao-topo {
+  margin-bottom: 16px;
+}
+
+.secao-titulo {
+  margin: 0;
+  font-family: 'Sora', sans-serif;
+  font-size: 1.9rem;
+  letter-spacing: -0.8px;
+}
+
+.secao-subtitulo {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.campo {
+  width: 100%;
+  background: linear-gradient(180deg, #111 0%, #151515 100%);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.campo::placeholder {
+  color: #949494;
+}
+
+.campo:focus {
+  border-color: rgba(255, 196, 86, 0.5);
+  box-shadow: 0 0 0 4px rgba(255, 196, 86, 0.10);
+  transform: translateY(-1px);
+}
+
+textarea.campo {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.margem-top {
+  margin-top: 14px;
+}
+
+.tipo-entrega {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.tag,
+.tag-ativa,
+.botao-secundario,
+.mini-btn,
+.danger-btn,
+.botao-principal {
+  border: none;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
+}
+
+.tag,
+.tag-ativa {
+  border-radius: 999px;
+  padding: 11px 17px;
+  font-weight: 700;
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.tag {
+  background: #171717;
+  color: #fff;
+}
+
+.tag-ativa {
+  background: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 100%);
+  color: #111;
+  font-weight: 800;
+  box-shadow: 0 12px 24px rgba(255, 185, 56, 0.16);
+}
+
+.botao-principal {
+  width: 100%;
+  border-radius: 18px;
+  padding: 15px 18px;
+  font-weight: 900;
+  color: #111;
+  background: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 100%);
+  box-shadow: 0 14px 28px rgba(255, 185, 56, 0.18);
+}
+
+.botao-principal:hover {
+  transform: translateY(-2px);
+}
+
+.botao-principal:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.botao-secundario {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  padding: 12px 16px;
+  background: #171717;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  font-weight: 700;
+}
+
+.troco-label {
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.erro-texto {
+  margin-bottom: 14px;
+  color: #ff7777;
+  font-weight: 800;
+}
+
+.categoria-secao + .categoria-secao {
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.categoria-titulo {
+  margin: 0 0 14px;
+  color: var(--gold-1);
+  font-family: 'Sora', sans-serif;
+  font-size: 1.18rem;
+}
+
+.produtos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.produto-card {
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, #171717 0%, #131313 100%);
+  color: #fff;
+  border-radius: 22px;
+  padding: 16px 18px;
+  min-height: 102px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.produto-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 196, 86, 0.28);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.22);
+}
+
+.produto-card-topo {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.produto-nome {
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.produto-preco {
+  color: var(--gold-1);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.produto-add-texto {
+  margin-top: 14px;
+  color: #a8a8a8;
+  font-size: 0.92rem;
+}
+
+.itens-carrinho {
+  display: grid;
+  gap: 12px;
+}
+
+.item-card {
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, #171717 0%, #141414 100%);
+  border-radius: 20px;
+  padding: 14px;
+}
+
+.item-topo,
+.modal-topo {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.item-nome {
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.item-info,
+.texto-suave {
+  color: var(--muted);
+}
+
+.item-total,
+.total-texto {
+  font-weight: 900;
+}
+
+.item-acoes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.mini-btn {
+  background: #2c2c2c;
+  color: #fff;
+  border-radius: 12px;
+  padding: 9px 12px;
+  font-weight: 800;
+}
+
+.danger-btn {
+  background: linear-gradient(180deg, #ff7f88 0%, #ff5f6d 100%);
+  color: #fff;
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-weight: 800;
+}
+
+.total-box {
+  margin-top: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #171717 0%, #141414 100%);
+  padding: 16px;
+}
+
+.pequeno {
+  font-size: 0.92rem;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.66);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 9999;
+  animation: fadeIn 0.18s ease;
+}
+
+.carrinho-modal {
+  width: 100%;
+  max-width: 430px;
+  height: 100%;
+  background: linear-gradient(180deg, #0f0f0f 0%, #121212 100%);
+  border-left: 1px solid rgba(255,255,255,0.08);
+  padding: 20px;
+  overflow-y: auto;
+  animation: slideIn 0.22s ease;
+}
+
+.footer-creditos {
+  margin-top: 28px;
+  padding: 24px;
+  text-align: center;
+  color: #d4d4d4;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.98rem;
+  line-height: 1.8;
+}
+
+.flying-item {
+  position: fixed;
+  z-index: 99999;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 100%);
+  color: #111;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+  transform: translate(0, 0) scale(1);
+  transition: transform 0.65s cubic-bezier(.2,.8,.2,1), opacity 0.65s ease;
+  box-shadow: 0 14px 24px rgba(255, 185, 56, 0.22);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(18px);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 920px) {
+  .grid-2,
+  .produtos-grid {
+    grid-template-columns: 1fr;
   }
 
-  function aumentar(id: number) {
-    setCarrinho((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, qtd: item.qtd + 1 } : item
-      )
-    );
+  .hero-titulo {
+    font-size: 2.2rem;
+    letter-spacing: -1px;
   }
 
-  function diminuir(id: number) {
-    setCarrinho((prev) =>
-      prev
-        .map((item) =>
-          item.id === id ? { ...item, qtd: item.qtd - 1 } : item
-        )
-        .filter((item) => item.qtd > 0)
-    );
+  .hero-resumo-centro {
+    flex-direction: column;
   }
 
-  function remover(id: number) {
-    setCarrinho((prev) => prev.filter((item) => item.id !== id));
+  .botao-carrinho-fixo {
+    min-width: 78px;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 14px;
   }
 
-  function focarPrimeiroErro(novosErros: CampoErros) {
-    if (novosErros.nome) {
-      nomeRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      nomeRef.current?.focus();
-      return;
-    }
-
-    if (novosErros.telefone) {
-      telefoneRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      telefoneRef.current?.focus();
-      return;
-    }
-
-    if (novosErros.endereco) {
-      enderecoRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      enderecoRef.current?.focus();
-      return;
-    }
-
-    if (novosErros.mesa) {
-      mesaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      mesaRef.current?.focus();
-      return;
-    }
-
-    if (novosErros.pagamento) {
-      pagamentoRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      pagamentoRef.current?.focus();
-      return;
-    }
-
-    if (novosErros.trocoPara) {
-      trocoRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      trocoRef.current?.focus();
-      return;
-    }
-
-    if (novosErros.carrinho) {
-      cardapioRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+  .hero-card,
+  .card {
+    padding: 18px;
+    border-radius: 22px;
   }
 
-  function validar() {
-    const novosErros: CampoErros = {};
-
-    if (!nome.trim()) novosErros.nome = true;
-    if (!telefone.trim()) novosErros.telefone = true;
-    if (!pagamento.trim()) novosErros.pagamento = true;
-
-    if (tipoEntrega === "delivery" && !endereco.trim()) {
-      novosErros.endereco = true;
-    }
-
-    if (tipoEntrega === "mesa" && !mesa.trim()) {
-      novosErros.mesa = true;
-    }
-
-    if (pagamento === "Dinheiro" && precisaTroco && !trocoPara.trim()) {
-      novosErros.trocoPara = true;
-    }
-
-    if (carrinho.length === 0) {
-      novosErros.carrinho = true;
-    }
-
-    setErros(novosErros);
-
-    if (Object.keys(novosErros).length > 0) {
-      focarPrimeiroErro(novosErros);
-      return false;
-    }
-
-    return true;
+  .hero-titulo {
+    font-size: 1.9rem;
   }
 
-  async function enviarPedido() {
-    if (!validar()) return;
-
-    setEnviando(true);
-
-    const enderecoFinal =
-      tipoEntrega === "delivery"
-        ? endereco
-        : tipoEntrega === "mesa"
-        ? `Mesa ${mesa}`
-        : "Retirada no local";
-
-    const observacaoFinal =
-      pagamento === "Dinheiro" && precisaTroco
-        ? observacao.trim()
-          ? `${observacao.trim()} | Troco para ${trocoPara}`
-          : `Troco para ${trocoPara}`
-        : observacao.trim();
-
-    const { data, error } = await supabase
-      .from("pedidos")
-      .insert([
-        {
-          nome,
-          telefone,
-          tipo_entrega: tipoEntrega,
-          endereco: enderecoFinal,
-          pagamento,
-          observacao: observacaoFinal,
-          itens: carrinho,
-          total,
-          status: "novo",
-        },
-      ])
-      .select()
-      .single();
-
-    setEnviando(false);
-
-    if (error || !data) {
-      alert("Erro ao enviar pedido.");
-      return;
-    }
-
-    setNome("");
-    setTelefone("");
-    setTipoEntrega("delivery");
-    setEndereco("");
-    setMesa("");
-    setPagamento("Pix");
-    setPrecisaTroco(false);
-    setTrocoPara("");
-    setObservacao("");
-    setCarrinho([]);
-    setErros({});
-    setMostrarCarrinho(false);
-
-    router.push(`/acompanhar/${data.id}`);
+  .secao-titulo {
+    font-size: 1.55rem;
   }
 
-  return (
-    <main className="pagina">
-      <div className="container">
-        <div className="hero-card centralizado">
-          <div className="hero-badge">Espetinho • Delivery • Mesa</div>
+  .carrinho-modal {
+    max-width: 100%;
+  }
 
-          <h1 className="hero-titulo fonte-top">🔥 Espetinho do Thalisca</h1>
-
-          <div className="hero-info centralizado-info">
-            <span>📞 (68) 99225-2648</span>
-            <span>📍 Av. Diamantino Augusto de Macedo, 866 - Olaria</span>
-          </div>
-
-          <div className="hero-acoes hero-acoes-centro">
-            <Link href="/painel" className="botao-secundario">
-              Painel do atendente
-            </Link>
-
-            <button
-              type="button"
-              className="botao-principal botao-carrinho-topo"
-              onClick={() => setMostrarCarrinho(true)}
-            >
-              🛒 Abrir carrinho ({carrinho.reduce((soma, item) => soma + item.qtd, 0)})
-            </button>
-          </div>
-        </div>
-
-        <div className="conteudo-simples">
-          <section className="card">
-            <div className="secao-topo">
-              <h2 className="secao-titulo">Novo pedido</h2>
-            </div>
-
-            <div className="grid-2">
-              <input
-                ref={nomeRef}
-                className="campo"
-                style={estiloErro(erros.nome)}
-                placeholder="Nome do cliente"
-                value={nome}
-                onChange={(e) => {
-                  setNome(e.target.value);
-                  if (e.target.value.trim()) {
-                    setErros((prev) => ({ ...prev, nome: false }));
-                  }
-                }}
-              />
-
-              <input
-                ref={telefoneRef}
-                className="campo"
-                style={estiloErro(erros.telefone)}
-                placeholder="Telefone"
-                value={telefone}
-                onChange={(e) => {
-                  setTelefone(e.target.value);
-                  if (e.target.value.trim()) {
-                    setErros((prev) => ({ ...prev, telefone: false }));
-                  }
-                }}
-              />
-            </div>
-
-            <div className="tipo-entrega">
-              <button
-                type="button"
-                className={tipoEntrega === "delivery" ? "tag-ativa" : "tag"}
-                onClick={() => setTipoEntrega("delivery")}
-              >
-                Delivery
-              </button>
-
-              <button
-                type="button"
-                className={tipoEntrega === "retirada" ? "tag-ativa" : "tag"}
-                onClick={() => setTipoEntrega("retirada")}
-              >
-                Retirada
-              </button>
-
-              <button
-                type="button"
-                className={tipoEntrega === "mesa" ? "tag-ativa" : "tag"}
-                onClick={() => setTipoEntrega("mesa")}
-              >
-                Mesa
-              </button>
-            </div>
-
-            {tipoEntrega === "delivery" && (
-              <input
-                ref={enderecoRef}
-                className="campo margem-top"
-                style={estiloErro(erros.endereco)}
-                placeholder="Endereço"
-                value={endereco}
-                onChange={(e) => {
-                  setEndereco(e.target.value);
-                  if (e.target.value.trim()) {
-                    setErros((prev) => ({ ...prev, endereco: false }));
-                  }
-                }}
-              />
-            )}
-
-            {tipoEntrega === "mesa" && (
-              <input
-                ref={mesaRef}
-                className="campo margem-top"
-                style={estiloErro(erros.mesa)}
-                placeholder="Número da mesa"
-                value={mesa}
-                onChange={(e) => {
-                  setMesa(e.target.value);
-                  if (e.target.value.trim()) {
-                    setErros((prev) => ({ ...prev, mesa: false }));
-                  }
-                }}
-              />
-            )}
-
-            <div className="grid-2 margem-top">
-              <select
-                ref={pagamentoRef}
-                className="campo"
-                style={estiloErro(erros.pagamento)}
-                value={pagamento}
-                onChange={(e) => {
-                  setPagamento(e.target.value);
-
-                  if (e.target.value !== "Dinheiro") {
-                    setPrecisaTroco(false);
-                    setTrocoPara("");
-                  }
-                }}
-              >
-                <option>Pix</option>
-                <option>Dinheiro</option>
-                <option>Cartão</option>
-              </select>
-
-              <textarea
-                className="campo"
-                placeholder="Observação: exemplo, sem arroz, sem cebola..."
-                value={observacao}
-                onChange={(e) => setObservacao(e.target.value)}
-                rows={3}
-              />
-            </div>
-
-            {pagamento === "Dinheiro" && (
-              <div className="margem-top">
-                <div className="troco-label">Precisa de troco?</div>
-
-                <div className="tipo-entrega">
-                  <button
-                    type="button"
-                    className={precisaTroco ? "tag-ativa" : "tag"}
-                    onClick={() => setPrecisaTroco(true)}
-                  >
-                    Sim
-                  </button>
-
-                  <button
-                    type="button"
-                    className={!precisaTroco ? "tag-ativa" : "tag"}
-                    onClick={() => {
-                      setPrecisaTroco(false);
-                      setTrocoPara("");
-                    }}
-                  >
-                    Não
-                  </button>
-                </div>
-
-                {precisaTroco && (
-                  <input
-                    ref={trocoRef}
-                    className="campo margem-top"
-                    style={estiloErro(erros.trocoPara)}
-                    placeholder="Troco para quanto?"
-                    value={trocoPara}
-                    onChange={(e) => {
-                      setTrocoPara(e.target.value);
-                      if (e.target.value.trim()) {
-                        setErros((prev) => ({ ...prev, trocoPara: false }));
-                      }
-                    }}
-                  />
-                )}
-              </div>
-            )}
-          </section>
-
-          <section ref={cardapioRef} className="card">
-            <div className="secao-topo">
-              <h2 className="secao-titulo">Cardápio</h2>
-            </div>
-
-            {erros.carrinho && (
-              <div className="erro-texto">Adiciona pelo menos 1 item no pedido.</div>
-            )}
-
-            <CategoriaSecao
-              titulo="Espetinho avulso tradicional"
-              produtos={PRODUTOS.filter((p) => p.categoria === "Espetinho avulso tradicional")}
-              onAdd={adicionar}
-            />
-
-            <CategoriaSecao
-              titulo="Espetinho avulso premium"
-              produtos={PRODUTOS.filter((p) => p.categoria === "Espetinho avulso premium")}
-              onAdd={adicionar}
-            />
-
-            <CategoriaSecao
-              titulo="Acompanhamento + tradicional"
-              produtos={PRODUTOS.filter((p) => p.categoria === "Acompanhamento + tradicional")}
-              onAdd={adicionar}
-            />
-
-            <CategoriaSecao
-              titulo="Acompanhamento + premium"
-              produtos={PRODUTOS.filter((p) => p.categoria === "Acompanhamento + premium")}
-              onAdd={adicionar}
-            />
-
-            <CategoriaSecao
-              titulo="Sucos"
-              produtos={PRODUTOS.filter((p) => p.categoria === "Sucos")}
-              onAdd={adicionar}
-            />
-
-            <CategoriaSecao
-              titulo="Geladinho"
-              produtos={PRODUTOS.filter((p) => p.categoria === "Geladinho")}
-              onAdd={adicionar}
-            />
-          </section>
-        </div>
-      </div>
-
-      {mostrarCarrinho && (
-        <div className="overlay" onClick={() => setMostrarCarrinho(false)}>
-          <div className="carrinho-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-topo">
-              <h2 className="secao-titulo">Carrinho</h2>
-              <button type="button" className="botao-secundario" onClick={() => setMostrarCarrinho(false)}>
-                Fechar
-              </button>
-            </div>
-
-            {carrinho.length === 0 ? (
-              <p className="texto-suave">Nenhum item adicionado.</p>
-            ) : (
-              <div className="itens-carrinho">
-                {carrinho.map((item) => (
-                  <div key={item.id} className="item-card">
-                    <div className="item-topo">
-                      <div>
-                        <div className="item-nome">{item.nome}</div>
-                        <div className="item-info">{dinheiro(item.preco)} cada</div>
-                      </div>
-                      <div className="item-total">{dinheiro(item.preco * item.qtd)}</div>
-                    </div>
-
-                    <div className="item-acoes">
-                      <button type="button" className="mini-btn" onClick={() => diminuir(item.id)}>
-                        -
-                      </button>
-                      <span>{item.qtd}</span>
-                      <button type="button" className="mini-btn" onClick={() => aumentar(item.id)}>
-                        +
-                      </button>
-                      <button type="button" className="danger-btn" onClick={() => remover(item.id)}>
-                        Excluir
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="total-box">
-              <div className="total-texto">Total: {dinheiro(total)}</div>
-              <div className="texto-suave pequeno">Sem taxa de entrega</div>
-            </div>
-
-            <button
-              type="button"
-              className="botao-principal margem-top"
-              onClick={enviarPedido}
-              disabled={enviando}
-            >
-              {enviando ? "Enviando..." : "Enviar pedido"}
-            </button>
-          </div>
-        </div>
-      )}
-    </main>
-  );
+  .produto-card {
+    min-height: 94px;
+  }
 }
