@@ -263,309 +263,243 @@ export default function Page() {
   return (
     <main className="pagina">
       <div className="container">
-        <div className="hero-card">
-          <div className="hero-topo">
-            <div>
-              <div className="hero-badge">Espetinho • Delivery • Mesa</div>
-              <h1 className="hero-titulo">🔥 Espetinho do Thalisca</h1>
-              <p className="hero-subtitulo">Pedido rápido, visual bonito e acompanhamento em tempo real.</p>
+        <div className="hero-card centralizado">
+          <div className="hero-badge">Espetinho • Delivery • Mesa</div>
 
-              <div className="hero-info">
-                <span>📞 (68) 99225-2648</span>
-                <span>📍 Av. Diamantino Augusto de Macedo, 866 - Olaria</span>
-              </div>
+          <h1 className="hero-titulo fonte-top">🔥 Espetinho do Thalisca</h1>
 
-              <div className="hero-acoes">
-                <Link href="/painel" className="botao-secundario">
-                  Painel do atendente
-                </Link>
-              </div>
-            </div>
+          <div className="hero-info centralizado-info">
+            <span>📞 (68) 99225-2648</span>
+            <span>📍 Av. Diamantino Augusto de Macedo, 866 - Olaria</span>
+          </div>
 
-            <div className="hero-resumo">
-              <div className="hero-mini-card">
-                <span>Itens no carrinho</span>
-                <strong>{carrinho.reduce((soma, item) => soma + item.qtd, 0)}</strong>
-              </div>
+          <div className="hero-acoes hero-acoes-centro">
+            <Link href="/painel" className="botao-secundario">
+              Painel do atendente
+            </Link>
 
-              <button
-                type="button"
-                className="botao-principal botao-carrinho"
-                onClick={() => setMostrarCarrinho(true)}
-              >
-                🛒 Abrir carrinho
-              </button>
-            </div>
+            <button
+              type="button"
+              className="botao-principal botao-carrinho-topo"
+              onClick={() => setMostrarCarrinho(true)}
+            >
+              🛒 Abrir carrinho ({carrinho.reduce((soma, item) => soma + item.qtd, 0)})
+            </button>
           </div>
         </div>
 
-        <div className="conteudo-grid">
-          <div className="conteudo-principal">
-            <section className="card">
-              <div className="secao-topo">
-                <h2 className="secao-titulo">Novo pedido</h2>
-                <p className="secao-subtitulo">Preenche os dados e monta teu pedido.</p>
-              </div>
+        <div className="conteudo-simples">
+          <section className="card">
+            <div className="secao-topo">
+              <h2 className="secao-titulo">Novo pedido</h2>
+            </div>
 
-              <div className="grid-2">
-                <input
-                  ref={nomeRef}
-                  className="campo"
-                  style={estiloErro(erros.nome)}
-                  placeholder="Nome do cliente"
-                  value={nome}
-                  onChange={(e) => {
-                    setNome(e.target.value);
-                    if (e.target.value.trim()) {
-                      setErros((prev) => ({ ...prev, nome: false }));
-                    }
-                  }}
-                />
-
-                <input
-                  ref={telefoneRef}
-                  className="campo"
-                  style={estiloErro(erros.telefone)}
-                  placeholder="Telefone"
-                  value={telefone}
-                  onChange={(e) => {
-                    setTelefone(e.target.value);
-                    if (e.target.value.trim()) {
-                      setErros((prev) => ({ ...prev, telefone: false }));
-                    }
-                  }}
-                />
-              </div>
-
-              <div className="tipo-entrega">
-                <button
-                  type="button"
-                  className={tipoEntrega === "delivery" ? "tag-ativa" : "tag"}
-                  onClick={() => setTipoEntrega("delivery")}
-                >
-                  Delivery
-                </button>
-
-                <button
-                  type="button"
-                  className={tipoEntrega === "retirada" ? "tag-ativa" : "tag"}
-                  onClick={() => setTipoEntrega("retirada")}
-                >
-                  Retirada
-                </button>
-
-                <button
-                  type="button"
-                  className={tipoEntrega === "mesa" ? "tag-ativa" : "tag"}
-                  onClick={() => setTipoEntrega("mesa")}
-                >
-                  Mesa
-                </button>
-              </div>
-
-              {tipoEntrega === "delivery" && (
-                <input
-                  ref={enderecoRef}
-                  className="campo margem-top"
-                  style={estiloErro(erros.endereco)}
-                  placeholder="Endereço"
-                  value={endereco}
-                  onChange={(e) => {
-                    setEndereco(e.target.value);
-                    if (e.target.value.trim()) {
-                      setErros((prev) => ({ ...prev, endereco: false }));
-                    }
-                  }}
-                />
-              )}
-
-              {tipoEntrega === "mesa" && (
-                <input
-                  ref={mesaRef}
-                  className="campo margem-top"
-                  style={estiloErro(erros.mesa)}
-                  placeholder="Número da mesa"
-                  value={mesa}
-                  onChange={(e) => {
-                    setMesa(e.target.value);
-                    if (e.target.value.trim()) {
-                      setErros((prev) => ({ ...prev, mesa: false }));
-                    }
-                  }}
-                />
-              )}
-
-              <div className="grid-2 margem-top">
-                <select
-                  ref={pagamentoRef}
-                  className="campo"
-                  style={estiloErro(erros.pagamento)}
-                  value={pagamento}
-                  onChange={(e) => {
-                    setPagamento(e.target.value);
-
-                    if (e.target.value !== "Dinheiro") {
-                      setPrecisaTroco(false);
-                      setTrocoPara("");
-                    }
-                  }}
-                >
-                  <option>Pix</option>
-                  <option>Dinheiro</option>
-                  <option>Cartão</option>
-                </select>
-
-                <textarea
-                  className="campo"
-                  placeholder="Observação: exemplo, sem arroz, sem cebola..."
-                  value={observacao}
-                  onChange={(e) => setObservacao(e.target.value)}
-                  rows={3}
-                />
-              </div>
-
-              {pagamento === "Dinheiro" && (
-                <div className="margem-top">
-                  <div className="troco-label">Precisa de troco?</div>
-
-                  <div className="tipo-entrega">
-                    <button
-                      type="button"
-                      className={precisaTroco ? "tag-ativa" : "tag"}
-                      onClick={() => setPrecisaTroco(true)}
-                    >
-                      Sim
-                    </button>
-
-                    <button
-                      type="button"
-                      className={!precisaTroco ? "tag-ativa" : "tag"}
-                      onClick={() => {
-                        setPrecisaTroco(false);
-                        setTrocoPara("");
-                      }}
-                    >
-                      Não
-                    </button>
-                  </div>
-
-                  {precisaTroco && (
-                    <input
-                      ref={trocoRef}
-                      className="campo margem-top"
-                      style={estiloErro(erros.trocoPara)}
-                      placeholder="Troco para quanto?"
-                      value={trocoPara}
-                      onChange={(e) => {
-                        setTrocoPara(e.target.value);
-                        if (e.target.value.trim()) {
-                          setErros((prev) => ({ ...prev, trocoPara: false }));
-                        }
-                      }}
-                    />
-                  )}
-                </div>
-              )}
-            </section>
-
-            <section ref={cardapioRef} className="card">
-              <div className="secao-topo">
-                <h2 className="secao-titulo">Cardápio</h2>
-                <p className="secao-subtitulo">Escolhe os itens tocando nos cards.</p>
-              </div>
-
-              {erros.carrinho && (
-                <div className="erro-texto">Adiciona pelo menos 1 item no pedido.</div>
-              )}
-
-              <CategoriaSecao
-                titulo="Espetinho avulso tradicional"
-                produtos={PRODUTOS.filter((p) => p.categoria === "Espetinho avulso tradicional")}
-                onAdd={adicionar}
+            <div className="grid-2">
+              <input
+                ref={nomeRef}
+                className="campo"
+                style={estiloErro(erros.nome)}
+                placeholder="Nome do cliente"
+                value={nome}
+                onChange={(e) => {
+                  setNome(e.target.value);
+                  if (e.target.value.trim()) {
+                    setErros((prev) => ({ ...prev, nome: false }));
+                  }
+                }}
               />
 
-              <CategoriaSecao
-                titulo="Espetinho avulso premium"
-                produtos={PRODUTOS.filter((p) => p.categoria === "Espetinho avulso premium")}
-                onAdd={adicionar}
+              <input
+                ref={telefoneRef}
+                className="campo"
+                style={estiloErro(erros.telefone)}
+                placeholder="Telefone"
+                value={telefone}
+                onChange={(e) => {
+                  setTelefone(e.target.value);
+                  if (e.target.value.trim()) {
+                    setErros((prev) => ({ ...prev, telefone: false }));
+                  }
+                }}
               />
+            </div>
 
-              <CategoriaSecao
-                titulo="Acompanhamento + tradicional"
-                produtos={PRODUTOS.filter((p) => p.categoria === "Acompanhamento + tradicional")}
-                onAdd={adicionar}
-              />
-
-              <CategoriaSecao
-                titulo="Acompanhamento + premium"
-                produtos={PRODUTOS.filter((p) => p.categoria === "Acompanhamento + premium")}
-                onAdd={adicionar}
-              />
-
-              <CategoriaSecao
-                titulo="Sucos"
-                produtos={PRODUTOS.filter((p) => p.categoria === "Sucos")}
-                onAdd={adicionar}
-              />
-
-              <CategoriaSecao
-                titulo="Geladinho"
-                produtos={PRODUTOS.filter((p) => p.categoria === "Geladinho")}
-                onAdd={adicionar}
-              />
-            </section>
-          </div>
-
-          <aside className="carrinho-lateral">
-            <div className="card carrinho-sticky">
-              <h2 className="secao-titulo">🛒 Carrinho</h2>
-
-              {carrinho.length === 0 ? (
-                <p className="texto-suave">Nenhum item adicionado.</p>
-              ) : (
-                <div className="itens-carrinho">
-                  {carrinho.map((item) => (
-                    <div key={item.id} className="item-card">
-                      <div className="item-topo">
-                        <div>
-                          <div className="item-nome">{item.nome}</div>
-                          <div className="item-info">{dinheiro(item.preco)} cada</div>
-                        </div>
-                        <div className="item-total">{dinheiro(item.preco * item.qtd)}</div>
-                      </div>
-
-                      <div className="item-acoes">
-                        <button type="button" className="mini-btn" onClick={() => diminuir(item.id)}>
-                          -
-                        </button>
-                        <span>{item.qtd}</span>
-                        <button type="button" className="mini-btn" onClick={() => aumentar(item.id)}>
-                          +
-                        </button>
-                        <button type="button" className="danger-btn" onClick={() => remover(item.id)}>
-                          Excluir
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="total-box">
-                <div className="total-texto">Total: {dinheiro(total)}</div>
-                <div className="texto-suave pequeno">Sem taxa de entrega</div>
-              </div>
+            <div className="tipo-entrega">
+              <button
+                type="button"
+                className={tipoEntrega === "delivery" ? "tag-ativa" : "tag"}
+                onClick={() => setTipoEntrega("delivery")}
+              >
+                Delivery
+              </button>
 
               <button
                 type="button"
-                className="botao-principal margem-top"
-                onClick={enviarPedido}
-                disabled={enviando}
+                className={tipoEntrega === "retirada" ? "tag-ativa" : "tag"}
+                onClick={() => setTipoEntrega("retirada")}
               >
-                {enviando ? "Enviando..." : "Enviar pedido"}
+                Retirada
+              </button>
+
+              <button
+                type="button"
+                className={tipoEntrega === "mesa" ? "tag-ativa" : "tag"}
+                onClick={() => setTipoEntrega("mesa")}
+              >
+                Mesa
               </button>
             </div>
-          </aside>
+
+            {tipoEntrega === "delivery" && (
+              <input
+                ref={enderecoRef}
+                className="campo margem-top"
+                style={estiloErro(erros.endereco)}
+                placeholder="Endereço"
+                value={endereco}
+                onChange={(e) => {
+                  setEndereco(e.target.value);
+                  if (e.target.value.trim()) {
+                    setErros((prev) => ({ ...prev, endereco: false }));
+                  }
+                }}
+              />
+            )}
+
+            {tipoEntrega === "mesa" && (
+              <input
+                ref={mesaRef}
+                className="campo margem-top"
+                style={estiloErro(erros.mesa)}
+                placeholder="Número da mesa"
+                value={mesa}
+                onChange={(e) => {
+                  setMesa(e.target.value);
+                  if (e.target.value.trim()) {
+                    setErros((prev) => ({ ...prev, mesa: false }));
+                  }
+                }}
+              />
+            )}
+
+            <div className="grid-2 margem-top">
+              <select
+                ref={pagamentoRef}
+                className="campo"
+                style={estiloErro(erros.pagamento)}
+                value={pagamento}
+                onChange={(e) => {
+                  setPagamento(e.target.value);
+
+                  if (e.target.value !== "Dinheiro") {
+                    setPrecisaTroco(false);
+                    setTrocoPara("");
+                  }
+                }}
+              >
+                <option>Pix</option>
+                <option>Dinheiro</option>
+                <option>Cartão</option>
+              </select>
+
+              <textarea
+                className="campo"
+                placeholder="Observação: exemplo, sem arroz, sem cebola..."
+                value={observacao}
+                onChange={(e) => setObservacao(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            {pagamento === "Dinheiro" && (
+              <div className="margem-top">
+                <div className="troco-label">Precisa de troco?</div>
+
+                <div className="tipo-entrega">
+                  <button
+                    type="button"
+                    className={precisaTroco ? "tag-ativa" : "tag"}
+                    onClick={() => setPrecisaTroco(true)}
+                  >
+                    Sim
+                  </button>
+
+                  <button
+                    type="button"
+                    className={!precisaTroco ? "tag-ativa" : "tag"}
+                    onClick={() => {
+                      setPrecisaTroco(false);
+                      setTrocoPara("");
+                    }}
+                  >
+                    Não
+                  </button>
+                </div>
+
+                {precisaTroco && (
+                  <input
+                    ref={trocoRef}
+                    className="campo margem-top"
+                    style={estiloErro(erros.trocoPara)}
+                    placeholder="Troco para quanto?"
+                    value={trocoPara}
+                    onChange={(e) => {
+                      setTrocoPara(e.target.value);
+                      if (e.target.value.trim()) {
+                        setErros((prev) => ({ ...prev, trocoPara: false }));
+                      }
+                    }}
+                  />
+                )}
+              </div>
+            )}
+          </section>
+
+          <section ref={cardapioRef} className="card">
+            <div className="secao-topo">
+              <h2 className="secao-titulo">Cardápio</h2>
+            </div>
+
+            {erros.carrinho && (
+              <div className="erro-texto">Adiciona pelo menos 1 item no pedido.</div>
+            )}
+
+            <CategoriaSecao
+              titulo="Espetinho avulso tradicional"
+              produtos={PRODUTOS.filter((p) => p.categoria === "Espetinho avulso tradicional")}
+              onAdd={adicionar}
+            />
+
+            <CategoriaSecao
+              titulo="Espetinho avulso premium"
+              produtos={PRODUTOS.filter((p) => p.categoria === "Espetinho avulso premium")}
+              onAdd={adicionar}
+            />
+
+            <CategoriaSecao
+              titulo="Acompanhamento + tradicional"
+              produtos={PRODUTOS.filter((p) => p.categoria === "Acompanhamento + tradicional")}
+              onAdd={adicionar}
+            />
+
+            <CategoriaSecao
+              titulo="Acompanhamento + premium"
+              produtos={PRODUTOS.filter((p) => p.categoria === "Acompanhamento + premium")}
+              onAdd={adicionar}
+            />
+
+            <CategoriaSecao
+              titulo="Sucos"
+              produtos={PRODUTOS.filter((p) => p.categoria === "Sucos")}
+              onAdd={adicionar}
+            />
+
+            <CategoriaSecao
+              titulo="Geladinho"
+              produtos={PRODUTOS.filter((p) => p.categoria === "Geladinho")}
+              onAdd={adicionar}
+            />
+          </section>
         </div>
       </div>
 
