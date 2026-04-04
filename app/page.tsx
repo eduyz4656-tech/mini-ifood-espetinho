@@ -139,37 +139,31 @@ export default function Page() {
       nomeRef.current?.focus();
       return;
     }
-
     if (novosErros.telefone) {
       telefoneRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       telefoneRef.current?.focus();
       return;
     }
-
     if (novosErros.endereco) {
       enderecoRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       enderecoRef.current?.focus();
       return;
     }
-
     if (novosErros.mesa) {
       mesaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       mesaRef.current?.focus();
       return;
     }
-
     if (novosErros.pagamento) {
       pagamentoRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       pagamentoRef.current?.focus();
       return;
     }
-
     if (novosErros.trocoPara) {
       trocoRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       trocoRef.current?.focus();
       return;
     }
-
     if (novosErros.carrinho) {
       cardapioRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -270,7 +264,7 @@ export default function Page() {
                 <div>📍 Av. Diamantino Augusto de Macedo, 866 - Olaria</div>
               </div>
 
-              <div className="topo-botoes">
+              <div className="topo-botoes" style={{ marginTop: 16 }}>
                 <Link href="/painel" className="aba">
                   Painel do atendente
                 </Link>
