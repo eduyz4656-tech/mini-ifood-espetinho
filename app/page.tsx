@@ -46,8 +46,10 @@ function CategoriaSecao({
   if (!produtos.length) return null;
 
   return (
-    <div className="categoria-secao">
-      <h3 className="categoria-titulo">{titulo}</h3>
+    <section className="categoria-secao">
+      <div className="categoria-header">
+        <h3 className="categoria-titulo">{titulo}</h3>
+      </div>
 
       <div className="produtos-grid">
         {produtos.map((produto) => (
@@ -57,16 +59,16 @@ function CategoriaSecao({
             className="produto-card"
             onClick={(e) => onAdd(produto, e)}
           >
-            <div className="produto-card-topo">
+            <div className="produto-info">
               <div className="produto-nome">{produto.nome}</div>
               <div className="produto-preco">{dinheiro(produto.preco)}</div>
             </div>
 
-            <div className="produto-add-texto">Adicionar ao carrinho</div>
+            <div className="produto-cta">Adicionar</div>
           </button>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -330,7 +332,7 @@ export default function Page() {
   }
 
   return (
-    <main className="pagina">
+    <main className="app-page">
       {flyingItems.map((item) => (
         <div
           key={item.id}
@@ -345,274 +347,272 @@ export default function Page() {
         </div>
       ))}
 
-      <div className="container">
-        <div className="hero-card">
-          <div className="hero-topbar">
-            <Link href="/painel" className="botao-secundario">
+      <div className="app-shell">
+        <header className="home-header">
+          <div className="top-actions">
+            <Link href="/painel" className="panel-link">
               Painel do atendente
             </Link>
 
             <button
               ref={cartButtonRef}
               type="button"
-              className="carrinho-topo"
+              className="cart-button"
               onClick={() => setMostrarCarrinho(true)}
               aria-label="Abrir carrinho"
             >
-              <span className="carrinho-icone">🛒</span>
+              <span className="cart-icon">🛒</span>
               {quantidadeTotal > 0 ? (
-                <span className="badge-carrinho">{quantidadeTotal}</span>
+                <span className="cart-badge">{quantidadeTotal}</span>
               ) : null}
             </button>
           </div>
 
-          <div className="hero-centro">
-            <div className="hero-badge">Espetinho • Delivery • Mesa</div>
+          <div className="brand-hero">
+            <div className="hero-pill">Espetinho • Delivery • Mesa</div>
 
-            <h1 className="hero-titulo centralizado">ESPETINHO DO THALISCA</h1>
+            <h1 className="brand-title">ESPETINHO DO THALISCA</h1>
 
-            <p className="hero-frase">"Fala comigo, fala com nós!"</p>
+            <p className="brand-slogan">"Fala comigo, fala com nós!"</p>
 
-            <p className="hero-insta">@espetinhodothalisca</p>
+            <p className="brand-instagram">@espetinhodothalisca</p>
 
-            <div className="hero-info hero-info-centralizada">
+            <div className="brand-meta">
               <span>📞 (68) 99225-2648</span>
               <span>📍 Av. Diamantino Augusto de Macedo, 866 - Olaria</span>
             </div>
 
-            <div className="hero-resumo">
-              <div className="hero-mini-card">
+            <div className="hero-stats">
+              <div className="hero-stat-card">
                 <span>Itens no carrinho</span>
                 <strong>{quantidadeTotal}</strong>
               </div>
 
-              <div className="hero-mini-card">
+              <div className="hero-stat-card">
                 <span>Total</span>
                 <strong>{dinheiro(total)}</strong>
               </div>
             </div>
           </div>
-        </div>
+        </header>
 
-        <div className="conteudo-grid">
-          <div className="conteudo-principal">
-            <section className="card">
-              <div className="secao-topo">
-                <h2 className="secao-titulo">Novo pedido</h2>
-                <p className="secao-subtitulo">Preenche os dados e monta teu pedido.</p>
-              </div>
+        <div className="content-area">
+          <section className="section-card order-card">
+            <div className="section-head">
+              <h2>Novo pedido</h2>
+              <p>Preenche os dados e monta teu pedido.</p>
+            </div>
 
-              <div className="grid-2">
-                <input
-                  ref={nomeRef}
-                  className="campo"
-                  style={estiloErro(erros.nome)}
-                  placeholder="Nome do cliente"
-                  value={nome}
-                  onChange={(e) => {
-                    setNome(e.target.value);
-                    if (e.target.value.trim()) {
-                      setErros((prev) => ({ ...prev, nome: false }));
-                    }
-                  }}
-                />
+            <div className="form-grid">
+              <input
+                ref={nomeRef}
+                className="field"
+                style={estiloErro(erros.nome)}
+                placeholder="Nome do cliente"
+                value={nome}
+                onChange={(e) => {
+                  setNome(e.target.value);
+                  if (e.target.value.trim()) {
+                    setErros((prev) => ({ ...prev, nome: false }));
+                  }
+                }}
+              />
 
-                <input
-                  ref={telefoneRef}
-                  className="campo"
-                  style={estiloErro(erros.telefone)}
-                  placeholder="Telefone"
-                  value={telefone}
-                  onChange={(e) => {
-                    setTelefone(e.target.value);
-                    if (e.target.value.trim()) {
-                      setErros((prev) => ({ ...prev, telefone: false }));
-                    }
-                  }}
-                />
-              </div>
+              <input
+                ref={telefoneRef}
+                className="field"
+                style={estiloErro(erros.telefone)}
+                placeholder="Telefone"
+                value={telefone}
+                onChange={(e) => {
+                  setTelefone(e.target.value);
+                  if (e.target.value.trim()) {
+                    setErros((prev) => ({ ...prev, telefone: false }));
+                  }
+                }}
+              />
+            </div>
 
-              <div className="tipo-entrega">
-                <button
-                  type="button"
-                  className={tipoEntrega === "delivery" ? "tag-ativa" : "tag"}
-                  onClick={() => setTipoEntrega("delivery")}
-                >
-                  Delivery
-                </button>
+            <div className="delivery-tabs">
+              <button
+                type="button"
+                className={tipoEntrega === "delivery" ? "tab active" : "tab"}
+                onClick={() => setTipoEntrega("delivery")}
+              >
+                Delivery
+              </button>
 
-                <button
-                  type="button"
-                  className={tipoEntrega === "retirada" ? "tag-ativa" : "tag"}
-                  onClick={() => setTipoEntrega("retirada")}
-                >
-                  Retirada
-                </button>
+              <button
+                type="button"
+                className={tipoEntrega === "retirada" ? "tab active" : "tab"}
+                onClick={() => setTipoEntrega("retirada")}
+              >
+                Retirada
+              </button>
 
-                <button
-                  type="button"
-                  className={tipoEntrega === "mesa" ? "tag-ativa" : "tag"}
-                  onClick={() => setTipoEntrega("mesa")}
-                >
-                  Mesa
-                </button>
-              </div>
+              <button
+                type="button"
+                className={tipoEntrega === "mesa" ? "tab active" : "tab"}
+                onClick={() => setTipoEntrega("mesa")}
+              >
+                Mesa
+              </button>
+            </div>
 
-              {tipoEntrega === "delivery" && (
-                <input
-                  ref={enderecoRef}
-                  className="campo margem-top"
-                  style={estiloErro(erros.endereco)}
-                  placeholder="Endereço"
-                  value={endereco}
-                  onChange={(e) => {
-                    setEndereco(e.target.value);
-                    if (e.target.value.trim()) {
-                      setErros((prev) => ({ ...prev, endereco: false }));
-                    }
-                  }}
-                />
-              )}
+            {tipoEntrega === "delivery" ? (
+              <input
+                ref={enderecoRef}
+                className="field field-margin"
+                style={estiloErro(erros.endereco)}
+                placeholder="Endereço"
+                value={endereco}
+                onChange={(e) => {
+                  setEndereco(e.target.value);
+                  if (e.target.value.trim()) {
+                    setErros((prev) => ({ ...prev, endereco: false }));
+                  }
+                }}
+              />
+            ) : null}
 
-              {tipoEntrega === "mesa" && (
-                <input
-                  ref={mesaRef}
-                  className="campo margem-top"
-                  style={estiloErro(erros.mesa)}
-                  placeholder="Número da mesa"
-                  value={mesa}
-                  onChange={(e) => {
-                    setMesa(e.target.value);
-                    if (e.target.value.trim()) {
-                      setErros((prev) => ({ ...prev, mesa: false }));
-                    }
-                  }}
-                />
-              )}
+            {tipoEntrega === "mesa" ? (
+              <input
+                ref={mesaRef}
+                className="field field-margin"
+                style={estiloErro(erros.mesa)}
+                placeholder="Número da mesa"
+                value={mesa}
+                onChange={(e) => {
+                  setMesa(e.target.value);
+                  if (e.target.value.trim()) {
+                    setErros((prev) => ({ ...prev, mesa: false }));
+                  }
+                }}
+              />
+            ) : null}
 
-              <div className="grid-2 margem-top">
-                <select
-                  ref={pagamentoRef}
-                  className="campo"
-                  style={estiloErro(erros.pagamento)}
-                  value={pagamento}
-                  onChange={(e) => {
-                    setPagamento(e.target.value);
+            <div className="form-grid field-margin">
+              <select
+                ref={pagamentoRef}
+                className="field"
+                style={estiloErro(erros.pagamento)}
+                value={pagamento}
+                onChange={(e) => {
+                  setPagamento(e.target.value);
 
-                    if (e.target.value !== "Dinheiro") {
+                  if (e.target.value !== "Dinheiro") {
+                    setPrecisaTroco(false);
+                    setTrocoPara("");
+                  }
+                }}
+              >
+                <option>Pix</option>
+                <option>Dinheiro</option>
+                <option>Cartão</option>
+              </select>
+
+              <textarea
+                className="field"
+                placeholder="Observação: exemplo, sem arroz, sem cebola..."
+                value={observacao}
+                onChange={(e) => setObservacao(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            {pagamento === "Dinheiro" ? (
+              <div className="field-margin">
+                <div className="troco-label">Precisa de troco?</div>
+
+                <div className="delivery-tabs">
+                  <button
+                    type="button"
+                    className={precisaTroco ? "tab active" : "tab"}
+                    onClick={() => setPrecisaTroco(true)}
+                  >
+                    Sim
+                  </button>
+
+                  <button
+                    type="button"
+                    className={!precisaTroco ? "tab active" : "tab"}
+                    onClick={() => {
                       setPrecisaTroco(false);
                       setTrocoPara("");
-                    }
-                  }}
-                >
-                  <option>Pix</option>
-                  <option>Dinheiro</option>
-                  <option>Cartão</option>
-                </select>
-
-                <textarea
-                  className="campo"
-                  placeholder="Observação: exemplo, sem arroz, sem cebola..."
-                  value={observacao}
-                  onChange={(e) => setObservacao(e.target.value)}
-                  rows={3}
-                />
-              </div>
-
-              {pagamento === "Dinheiro" && (
-                <div className="margem-top">
-                  <div className="troco-label">Precisa de troco?</div>
-
-                  <div className="tipo-entrega">
-                    <button
-                      type="button"
-                      className={precisaTroco ? "tag-ativa" : "tag"}
-                      onClick={() => setPrecisaTroco(true)}
-                    >
-                      Sim
-                    </button>
-
-                    <button
-                      type="button"
-                      className={!precisaTroco ? "tag-ativa" : "tag"}
-                      onClick={() => {
-                        setPrecisaTroco(false);
-                        setTrocoPara("");
-                      }}
-                    >
-                      Não
-                    </button>
-                  </div>
-
-                  {precisaTroco && (
-                    <input
-                      ref={trocoRef}
-                      className="campo margem-top"
-                      style={estiloErro(erros.trocoPara)}
-                      placeholder="Troco para quanto?"
-                      value={trocoPara}
-                      onChange={(e) => {
-                        setTrocoPara(e.target.value);
-                        if (e.target.value.trim()) {
-                          setErros((prev) => ({ ...prev, trocoPara: false }));
-                        }
-                      }}
-                    />
-                  )}
+                    }}
+                  >
+                    Não
+                  </button>
                 </div>
-              )}
-            </section>
 
-            <section ref={cardapioRef} className="card">
-              <div className="secao-topo">
-                <h2 className="secao-titulo">Cardápio</h2>
-                <p className="secao-subtitulo">Escolhe os itens tocando nos cards.</p>
+                {precisaTroco ? (
+                  <input
+                    ref={trocoRef}
+                    className="field field-margin"
+                    style={estiloErro(erros.trocoPara)}
+                    placeholder="Troco para quanto?"
+                    value={trocoPara}
+                    onChange={(e) => {
+                      setTrocoPara(e.target.value);
+                      if (e.target.value.trim()) {
+                        setErros((prev) => ({ ...prev, trocoPara: false }));
+                      }
+                    }}
+                  />
+                ) : null}
               </div>
+            ) : null}
+          </section>
 
-              {erros.carrinho ? (
-                <div className="erro-texto">Adiciona pelo menos 1 item no pedido.</div>
-              ) : null}
+          <section ref={cardapioRef} className="section-card menu-card">
+            <div className="section-head">
+              <h2>Cardápio</h2>
+              <p>Escolhe os itens tocando nos cards.</p>
+            </div>
 
-              <CategoriaSecao
-                titulo="Espetinho avulso tradicional"
-                produtos={PRODUTOS.filter((p) => p.categoria === "Espetinho avulso tradicional")}
-                onAdd={adicionar}
-              />
+            {erros.carrinho ? (
+              <div className="error-text">Adiciona pelo menos 1 item no pedido.</div>
+            ) : null}
 
-              <CategoriaSecao
-                titulo="Espetinho avulso premium"
-                produtos={PRODUTOS.filter((p) => p.categoria === "Espetinho avulso premium")}
-                onAdd={adicionar}
-              />
+            <CategoriaSecao
+              titulo="Espetinho avulso tradicional"
+              produtos={PRODUTOS.filter((p) => p.categoria === "Espetinho avulso tradicional")}
+              onAdd={adicionar}
+            />
 
-              <CategoriaSecao
-                titulo="Acompanhamento + tradicional"
-                produtos={PRODUTOS.filter((p) => p.categoria === "Acompanhamento + tradicional")}
-                onAdd={adicionar}
-              />
+            <CategoriaSecao
+              titulo="Espetinho avulso premium"
+              produtos={PRODUTOS.filter((p) => p.categoria === "Espetinho avulso premium")}
+              onAdd={adicionar}
+            />
 
-              <CategoriaSecao
-                titulo="Acompanhamento + premium"
-                produtos={PRODUTOS.filter((p) => p.categoria === "Acompanhamento + premium")}
-                onAdd={adicionar}
-              />
+            <CategoriaSecao
+              titulo="Acompanhamento + tradicional"
+              produtos={PRODUTOS.filter((p) => p.categoria === "Acompanhamento + tradicional")}
+              onAdd={adicionar}
+            />
 
-              <CategoriaSecao
-                titulo="Sucos"
-                produtos={PRODUTOS.filter((p) => p.categoria === "Sucos")}
-                onAdd={adicionar}
-              />
+            <CategoriaSecao
+              titulo="Acompanhamento + premium"
+              produtos={PRODUTOS.filter((p) => p.categoria === "Acompanhamento + premium")}
+              onAdd={adicionar}
+            />
 
-              <CategoriaSecao
-                titulo="Geladinho"
-                produtos={PRODUTOS.filter((p) => p.categoria === "Geladinho")}
-                onAdd={adicionar}
-              />
-            </section>
-          </div>
+            <CategoriaSecao
+              titulo="Sucos"
+              produtos={PRODUTOS.filter((p) => p.categoria === "Sucos")}
+              onAdd={adicionar}
+            />
+
+            <CategoriaSecao
+              titulo="Geladinho"
+              produtos={PRODUTOS.filter((p) => p.categoria === "Geladinho")}
+              onAdd={adicionar}
+            />
+          </section>
         </div>
 
-        <footer className="footer-creditos">
+        <footer className="credits-footer">
           <div>Desenvolvido por Eduardo Marques</div>
           <div>Instagram: @_s4ntozy</div>
           <div>Número: 68992562029</div>
@@ -620,13 +620,14 @@ export default function Page() {
       </div>
 
       {mostrarCarrinho ? (
-        <div className="overlay" onClick={() => setMostrarCarrinho(false)}>
-          <div className="carrinho-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-topo">
-              <h2 className="secao-titulo">Carrinho</h2>
+        <div className="cart-overlay" onClick={() => setMostrarCarrinho(false)}>
+          <div className="cart-drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="cart-drawer-top">
+              <h2>Carrinho</h2>
+
               <button
                 type="button"
-                className="botao-secundario"
+                className="panel-link"
                 onClick={() => setMostrarCarrinho(false)}
               >
                 Fechar
@@ -634,24 +635,26 @@ export default function Page() {
             </div>
 
             {carrinho.length === 0 ? (
-              <p className="texto-suave">Nenhum item adicionado.</p>
+              <p className="muted-text">Nenhum item adicionado.</p>
             ) : (
-              <div className="itens-carrinho">
+              <div className="cart-items">
                 {carrinho.map((item) => (
-                  <div key={item.id} className="item-card">
-                    <div className="item-topo">
+                  <div key={item.id} className="cart-item-card">
+                    <div className="cart-item-top">
                       <div>
-                        <div className="item-nome">{item.nome}</div>
-                        <div className="item-info">{dinheiro(item.preco)} cada</div>
+                        <div className="cart-item-name">{item.nome}</div>
+                        <div className="cart-item-info">{dinheiro(item.preco)} cada</div>
                       </div>
 
-                      <div className="item-total">{dinheiro(item.preco * item.qtd)}</div>
+                      <div className="cart-item-total">
+                        {dinheiro(item.preco * item.qtd)}
+                      </div>
                     </div>
 
-                    <div className="item-acoes">
+                    <div className="cart-item-actions">
                       <button
                         type="button"
-                        className="mini-btn"
+                        className="small-btn"
                         onClick={() => diminuir(item.id)}
                       >
                         -
@@ -661,7 +664,7 @@ export default function Page() {
 
                       <button
                         type="button"
-                        className="mini-btn"
+                        className="small-btn"
                         onClick={() => aumentar(item.id)}
                       >
                         +
@@ -680,14 +683,14 @@ export default function Page() {
               </div>
             )}
 
-            <div className="total-box">
-              <div className="total-texto">Total: {dinheiro(total)}</div>
-              <div className="texto-suave pequeno">Sem taxa de entrega</div>
+            <div className="cart-total-box">
+              <div className="cart-total-text">Total: {dinheiro(total)}</div>
+              <div className="muted-text small-text">Sem taxa de entrega</div>
             </div>
 
             <button
               type="button"
-              className="botao-principal margem-top"
+              className="primary-btn drawer-send-btn"
               onClick={enviarPedido}
               disabled={enviando}
             >
