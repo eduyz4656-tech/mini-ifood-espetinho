@@ -102,6 +102,10 @@ export default function Page() {
     return carrinho.reduce((soma, item) => soma + item.preco * item.qtd, 0);
   }, [carrinho]);
 
+  const quantidadeTotal = useMemo(() => {
+    return carrinho.reduce((soma, item) => soma + item.qtd, 0);
+  }, [carrinho]);
+
   function adicionarSemAnimacao(produto: Produto) {
     setCarrinho((prev) => {
       const existe = prev.find((item) => item.id === produto.id);
@@ -118,11 +122,9 @@ export default function Page() {
     setErros((prev) => ({ ...prev, carrinho: false }));
   }
 
-  function animarAteCarrinho(
-    produto: Produto,
-    origemEl: HTMLElement
-  ) {
+  function animarAteCarrinho(produto: Produto, origemEl: HTMLElement) {
     const cartEl = cartButtonRef.current;
+
     if (!cartEl) {
       adicionarSemAnimacao(produto);
       return;
@@ -344,55 +346,55 @@ export default function Page() {
       ))}
 
       <div className="container">
-        <div className="top-fixed-actions">
-          <button
-            ref={cartButtonRef}
-            type="button"
-            className="botao-principal botao-carrinho-fixo"
-            onClick={() => setMostrarCarrinho(true)}
-          >
-            🛒 {carrinho.reduce((soma, item) => soma + item.qtd, 0)}
-          </button>
-        </div>
-
         <div className="hero-card">
-          <div className="hero-topo">
-            <div>
-              <div className="hero-badge">Espetinho • Delivery • Mesa</div>
-              <div className="hero-instagram">@espetinhodothalisca</div>
-              <h1 className="hero-titulo">Espetinho do Thalisca</h1>
-              <p className="hero-subtitulo">
-                O melhor espetinho da cidade, com pedido fácil e visual marcante.
-              </p>
+          <div className="hero-topbar">
+            <Link href="/painel" className="botao-secundario">
+              Painel do atendente
+            </Link>
 
-              <div className="hero-info">
-                <span>📞 (68) 99225-2648</span>
-                <span>📍 Av. Diamantino Augusto de Macedo, 866 - Olaria</span>
-              </div>
+            <button
+              ref={cartButtonRef}
+              type="button"
+              className="carrinho-topo"
+              onClick={() => setMostrarCarrinho(true)}
+            >
+              <span className="carrinho-icone">🛒</span>
+              {quantidadeTotal > 0 ? (
+                <span className="badge-carrinho">{quantidadeTotal}</span>
+              ) : null}
+            </button>
+          </div>
 
-              <div className="hero-acoes">
-                <Link href="/painel" className="botao-secundario">
-                  Painel do atendente
-                </Link>
-              </div>
+          <div className="hero-centro">
+            <div className="hero-badge">Espetinho • Delivery • Mesa</div>
+
+            <h1 className="hero-titulo centralizado">ESPETINHO DO THALISCA</h1>
+
+            <p className="hero-frase">"Fala comigo, fala com nós!"</p>
+
+            <p className="hero-insta">@espetinhodothalisca</p>
+
+            <div className="hero-info hero-info-centralizada">
+              <span>📞 (68) 99225-2648</span>
+              <span>📍 Av. Diamantino Augusto de Macedo, 866 - Olaria</span>
             </div>
 
-            <div className="hero-resumo-centro">
-              <div className="hero-mini-card destaque-centro">
+            <div className="hero-resumo">
+              <div className="hero-mini-card">
                 <span>Itens no carrinho</span>
-                <strong>{carrinho.reduce((soma, item) => soma + item.qtd, 0)}</strong>
+                <strong>{quantidadeTotal}</strong>
               </div>
 
-              <div className="hero-mini-card destaque-centro">
-                <span>Total atual</span>
+              <div className="hero-mini-card">
+                <span>Total</span>
                 <strong>{dinheiro(total)}</strong>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="conteudo-grid sem-carrinho-lateral">
-          <div className="conteudo-principal full-width">
+        <div className="conteudo-grid">
+          <div className="conteudo-principal">
             <section className="card">
               <div className="secao-topo">
                 <h2 className="secao-titulo">Novo pedido</h2>
@@ -566,9 +568,9 @@ export default function Page() {
                 <p className="secao-subtitulo">Escolhe os itens tocando nos cards.</p>
               </div>
 
-              {erros.carrinho && (
+              {erros.carrinho ? (
                 <div className="erro-texto">Adiciona pelo menos 1 item no pedido.</div>
-              )}
+              ) : null}
 
               <CategoriaSecao
                 titulo="Espetinho avulso tradicional"
@@ -616,7 +618,7 @@ export default function Page() {
         </footer>
       </div>
 
-      {mostrarCarrinho && (
+      {mostrarCarrinho ? (
         <div className="overlay" onClick={() => setMostrarCarrinho(false)}>
           <div className="carrinho-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-topo">
@@ -641,6 +643,7 @@ export default function Page() {
                         <div className="item-nome">{item.nome}</div>
                         <div className="item-info">{dinheiro(item.preco)} cada</div>
                       </div>
+
                       <div className="item-total">{dinheiro(item.preco * item.qtd)}</div>
                     </div>
 
@@ -691,7 +694,7 @@ export default function Page() {
             </button>
           </div>
         </div>
-      )}
+      ) : null}
     </main>
   );
 }
