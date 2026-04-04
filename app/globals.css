@@ -237,7 +237,8 @@ Textarea {
 .tag,
 .tag-ativa,
 .mini-btn,
-.danger-btn {
+.danger-btn,
+.status-badge {
   Border: none;
   Cursor: pointer;
   Transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
@@ -443,7 +444,8 @@ Textarea.campo {
   Gap: 12px;
 }
 
-.item-card {
+.item-card,
+.pedido-card {
   Border: 1px solid rgba(255,255,255,0.08);
   Background: linear-gradient(180deg, #171717 0%, #141414 100%);
   Border-radius: 20px;
@@ -451,7 +453,8 @@ Textarea.campo {
 }
 
 .item-topo,
-.modal-topo {
+.modal-topo,
+.pedido-topo {
   Display: flex;
   Justify-content: space-between;
   Gap: 12px;
@@ -469,11 +472,14 @@ Textarea.campo {
 }
 
 .item-total,
-.total-texto {
+.total-texto,
+.pedido-total,
+.status-grande {
   Font-weight: 900;
 }
 
-.item-acoes {
+.item-acoes,
+.pedido-acoes {
   Display: flex;
   Gap: 8px;
   Flex-wrap: wrap;
@@ -497,6 +503,26 @@ Textarea.campo {
   Font-weight: 800;
 }
 
+.status-badge {
+  Display: inline-flex;
+  Align-items: center;
+  Justify-content: center;
+  Padding: 8px 12px;
+  Border-radius: 999px;
+  Background: #2c2c2c;
+  Color: #fff;
+  Font-size: 0.9rem;
+  Font-weight: 800;
+}
+
+.status-badge.preparo {
+  Background: #705111;
+}
+
+.status-badge.entregue {
+  Background: #1f6933;
+}
+
 .total-box {
   Margin-top: 18px;
   Border: 1px solid rgba(255,255,255,0.08);
@@ -507,6 +533,38 @@ Textarea.campo {
 
 .pequeno {
   Font-size: 0.92rem;
+}
+
+.painel-resumo {
+  Display: grid;
+  Grid-template-columns: repeat(4, 1fr);
+  Gap: 14px;
+  Margin-bottom: 18px;
+}
+
+.resumo-card {
+  Background: linear-gradient(180deg, rgba(20,20,20,0.96) 0%, rgba(16,16,16,0.94) 100%);
+  Border: 1px solid var(--line);
+  Border-radius: 20px;
+  Padding: 16px;
+  Display: grid;
+  Gap: 6px;
+  Box-shadow: var(--shadow);
+}
+
+.resumo-card span {
+  Color: var(--muted);
+}
+
+.resumo-card strong {
+  Color: var(--gold-1);
+  Font-size: 1.35rem;
+}
+
+.painel-grid {
+  Display: grid;
+  Grid-template-columns: repeat(3, 1fr);
+  Gap: 18px;
 }
 
 .overlay {
@@ -574,7 +632,9 @@ Textarea.campo {
 
 @media (max-width: 920px) {
   .grid-2,
-  .produtos-grid {
+  .produtos-grid,
+  .painel-grid,
+  .painel-resumo {
     Grid-template-columns: 1fr;
   }
 

@@ -357,6 +357,7 @@ export default function Page() {
               type="button"
               className="carrinho-topo"
               onClick={() => setMostrarCarrinho(true)}
+              aria-label="Abrir carrinho"
             >
               <span className="carrinho-icone">🛒</span>
               {quantidadeTotal > 0 ? (
