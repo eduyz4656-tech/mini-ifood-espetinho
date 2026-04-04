@@ -52,8 +52,10 @@ export default function AcompanharPedidoPage() {
     return (
       <main className="pagina">
         <div className="container">
-          <div className="card login-card">
-            <h1 className="titulo-principal">Carregando pedido...</h1>
+          <div className="login-box">
+            <div className="card login-card">
+              <h1 className="hero-titulo">Carregando pedido...</h1>
+            </div>
           </div>
         </div>
       </main>
@@ -64,12 +66,14 @@ export default function AcompanharPedidoPage() {
     return (
       <main className="pagina">
         <div className="container">
-          <div className="card login-card">
-            <h1 className="titulo-principal">Pedido não encontrado</h1>
-            <div className="margem-top">
-              <Link href="/" className="aba">
-                Voltar
-              </Link>
+          <div className="login-box">
+            <div className="card login-card">
+              <h1 className="hero-titulo">Pedido não encontrado</h1>
+              <div className="margem-top">
+                <Link href="/" className="botao-secundario">
+                  Voltar
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -80,20 +84,21 @@ export default function AcompanharPedidoPage() {
   return (
     <main className="pagina">
       <div className="container">
-        <div className="topo-card">
-          <div className="topo-flex">
+        <div className="hero-card">
+          <div className="hero-topo">
             <div>
-              <h1 className="titulo-principal">📦 Acompanhar pedido</h1>
-              <p className="subtitulo">Pedido #{pedido.id}</p>
+              <div className="hero-badge">Acompanhamento em tempo real</div>
+              <h1 className="hero-titulo">📦 Pedido #{pedido.id}</h1>
+              <p className="hero-subtitulo">Acompanhe o andamento do seu pedido.</p>
             </div>
 
-            <Link href="/" className="aba">
+            <Link href="/" className="botao-secundario">
               Fazer novo pedido
             </Link>
           </div>
         </div>
 
-        <div className="acompanhar-box">
+        <div className="acompanhar-grid">
           <section className="card">
             <h2 className="secao-titulo">Status</h2>
             <div className="status-grande">{textoStatus(pedido.status)}</div>

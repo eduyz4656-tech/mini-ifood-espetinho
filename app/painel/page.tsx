@@ -7,6 +7,13 @@ import { Pedido, dinheiro } from "../lib/cardapio";
 
 const SENHA_PAINEL = "1234";
 
+function textoStatus(status: string) {
+  if (status === "novo") return "Novo";
+  if (status === "preparo") return "Em preparo";
+  if (status === "entregue") return "Entregue";
+  return status;
+}
+
 export default function PainelPage() {
   const [senha, setSenha] = useState("");
   const [autorizado, setAutorizado] = useState(false);
@@ -22,6 +29,7 @@ export default function PainelPage() {
 
   useEffect(() => {
     if (!autorizado) return;
+
     carregarPedidos();
 
     const intervalo = setInterval(() => {
@@ -63,7 +71,10 @@ export default function PainelPage() {
   }
 
   async function atualizarStatus(id: number, status: "novo" | "preparo" | "entregue") {
-    const { error } = await supabase.from("pedidos").update({ status }).eq("id", id);
+    const { error } = await supabase
+      .from("pedidos")
+      .update({ status })
+      .eq("id", id);
 
     if (error) {
       alert("Erro ao atualizar status.");
@@ -77,26 +88,29 @@ export default function PainelPage() {
     return (
       <main className="pagina">
         <div className="container">
-          <div className="card login-card">
-            <h1 className="titulo-principal">🔒 Painel do atendente</h1>
-            <p className="subtitulo">Digite a senha para entrar</p>
+          <div className="login-box">
+            <div className="card login-card">
+              <div className="hero-badge">Acesso restrito</div>
+              <h1 className="hero-titulo">🔒 Painel do atendente</h1>
+              <p className="hero-subtitulo">Digite a senha para continuar.</p>
 
-            <input
-              className="campo"
-              type="password"
-              placeholder="Senha do painel"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-            />
+              <input
+                className="campo margem-top"
+                type="password"
+                placeholder="Senha do painel"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+              />
 
-            <button type="button" className="principal-btn margem-top" onClick={entrar}>
-              Entrar
-            </button>
+              <button type="button" className="botao-principal margem-top" onClick={entrar}>
+                Entrar
+              </button>
 
-            <div className="margem-top">
-              <Link href="/" className="aba">
-                Voltar para o cliente
-              </Link>
+              <div className="margem-top">
+                <Link href="/" className="botao-secundario">
+                  Voltar para o cliente
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -112,15 +126,16 @@ export default function PainelPage() {
   return (
     <main className="pagina">
       <div className="container">
-        <div className="topo-card">
-          <div className="topo-flex">
+        <div className="hero-card">
+          <div className="hero-topo">
             <div>
-              <h1 className="titulo-principal">📋 Painel do atendente</h1>
-              <p className="subtitulo">Controle dos pedidos</p>
+              <div className="hero-badge">Painel administrativo</div>
+              <h1 className="hero-titulo">📋 Painel do atendente</h1>
+              <p className="hero-subtitulo">Controle total dos pedidos em tempo real.</p>
             </div>
 
-            <div className="painel-topo-acoes">
-              <Link href="/" className="aba">
+            <div className="hero-acoes">
+              <Link href="/" className="botao-secundario">
                 Ver cliente
               </Link>
               <button type="button" className="danger-btn" onClick={sair}>
@@ -149,20 +164,20 @@ export default function PainelPage() {
           </div>
         </div>
 
-        {carregando && <p className="muted">Carregando pedidos...</p>}
+        {carregando && <p className="texto-suave">Carregando pedidos...</p>}
 
         <div className="painel-grid">
           <section className="card">
             <h2 className="secao-titulo">Novos</h2>
 
             {novos.length === 0 ? (
-              <p className="muted">Nenhum pedido novo.</p>
+              <p className="texto-suave">Nenhum pedido novo.</p>
             ) : (
               novos.map((pedido) => (
                 <div key={pedido.id} className="pedido-card">
                   <div className="pedido-topo">
                     <strong>Pedido #{pedido.id}</strong>
-                    <span className="status-badge">{pedido.status}</span>
+                    <span className="status-badge">{textoStatus(pedido.status)}</span>
                   </div>
 
                   <div className="pedido-linha"><b>Cliente:</b> {pedido.nome}</div>
@@ -188,7 +203,7 @@ export default function PainelPage() {
                   <div className="pedido-acoes">
                     <button
                       type="button"
-                      className="principal-btn pequeno-btn"
+                      className="botao-principal pequeno-btn"
                       onClick={() => atualizarStatus(pedido.id, "preparo")}
                     >
                       Colocar em preparo
@@ -203,18 +218,17 @@ export default function PainelPage() {
             <h2 className="secao-titulo">Em preparo</h2>
 
             {preparo.length === 0 ? (
-              <p className="muted">Nenhum pedido em preparo.</p>
+              <p className="texto-suave">Nenhum pedido em preparo.</p>
             ) : (
               preparo.map((pedido) => (
                 <div key={pedido.id} className="pedido-card">
                   <div className="pedido-topo">
                     <strong>Pedido #{pedido.id}</strong>
-                    <span className="status-badge preparo">{pedido.status}</span>
+                    <span className="status-badge preparo">{textoStatus(pedido.status)}</span>
                   </div>
 
                   <div className="pedido-linha"><b>Cliente:</b> {pedido.nome}</div>
                   <div className="pedido-linha"><b>Telefone:</b> {pedido.telefone}</div>
-                  <div className="pedido-linha"><b>Entrega:</b> {pedido.tipo_entrega}</div>
                   <div className="pedido-linha"><b>Local:</b> {pedido.endereco}</div>
 
                   <div className="pedido-itens">
@@ -230,7 +244,7 @@ export default function PainelPage() {
                   <div className="pedido-acoes">
                     <button
                       type="button"
-                      className="principal-btn pequeno-btn"
+                      className="botao-principal pequeno-btn"
                       onClick={() => atualizarStatus(pedido.id, "entregue")}
                     >
                       Marcar como entregue
@@ -245,13 +259,13 @@ export default function PainelPage() {
             <h2 className="secao-titulo">Entregues</h2>
 
             {entregues.length === 0 ? (
-              <p className="muted">Nenhum pedido entregue.</p>
+              <p className="texto-suave">Nenhum pedido entregue.</p>
             ) : (
               entregues.map((pedido) => (
                 <div key={pedido.id} className="pedido-card">
                   <div className="pedido-topo">
                     <strong>Pedido #{pedido.id}</strong>
-                    <span className="status-badge entregue">{pedido.status}</span>
+                    <span className="status-badge entregue">{textoStatus(pedido.status)}</span>
                   </div>
 
                   <div className="pedido-linha"><b>Cliente:</b> {pedido.nome}</div>
