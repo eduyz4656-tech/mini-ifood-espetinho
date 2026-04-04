@@ -351,7 +351,7 @@ export default function Page() {
         <header className="home-header">
           <div className="top-actions">
             <Link href="/painel" className="panel-link">
-              Painel do atendente
+              ADM
             </Link>
 
             <button
